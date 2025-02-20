@@ -1,35 +1,36 @@
+export default function AddTimeline({ quizId, activeStep, setActiveStep }) {
+    const handleStepClick = (step) => {
+        if (!quizId) {
+            alert('Please complete the quiz details first.');
+            return;
+        }
+        setActiveStep(step);
+    };
 
+    return (
+        <div className="flex justify-center space-x-4">
+            <button
+                className={`p-2 rounded-full ${activeStep === 'details' ? 'bg-blue-400' : 'bg-gray-300'}`}
+                onClick={() => setActiveStep('details')}
+            >
+                Details
+            </button>
 
+            <button
+                className={`p-2 rounded-full ${activeStep === 'questions' ? 'bg-blue-400' : 'bg-gray-300'} ${!quizId && 'cursor-not-allowed opacity-50'}`}
+                onClick={() => handleStepClick('questions')}
+                disabled={!quizId}
+            >
+                Questions
+            </button>
 
-
-export default function AddTimeline({isDetailsSelected,setDetailsSelection, isQuestionsSelected, setQuestionsSelection, isSettingsSelected, setSettingsSelection}) {
-
-    const detailsClicked = ()=>{
-        setDetailsSelection(true);
-        setQuestionsSelection(false);
-        setSettingsSelection(false);
-    }
-
-    const questionsClicked = ()=>{
-        setDetailsSelection(true);
-        setQuestionsSelection(true);
-        setSettingsSelection(false);
-    }
-
-    const SettingsClicked = ()=>{
-        setDetailsSelection(true);
-        setQuestionsSelection(true);
-        setSettingsSelection(true);
-    }
-
-
-  return (
-    <div className='flex flex-row justify-center '>
-        <div className={`cursor-pointer rounded-full hover:bg-blue-400 p-2 ${isDetailsSelected && 'bg-blue-400'} ${isQuestionsSelected && 'rounded-r-none'}`} onClick={detailsClicked}>Details</div>
-        <div className={`${isQuestionsSelected && 'bg-blue-400'} w-11`}></div>
-        <div className={`cursor-pointer rounded-full hover:bg-blue-400 p-2 ${isQuestionsSelected && 'bg-blue-400 rounded-l-none'} ${isSettingsSelected && 'rounded-r-none'}`} onClick={questionsClicked}>Questions</div>
-        <div className={`${isSettingsSelected && 'bg-blue-400'} w-11`}></div>
-        <div className={`cursor-pointer rounded-full hover:bg-blue-400 p-2 ${isSettingsSelected && 'bg-blue-400 rounded-l-none'}`} onClick={SettingsClicked}>Settings</div>
-    </div>
-  )
+            <button
+                className={`p-2 rounded-full ${activeStep === 'settings' ? 'bg-blue-400' : 'bg-gray-300'} ${!quizId && 'cursor-not-allowed opacity-50'}`}
+                onClick={() => handleStepClick('settings')}
+                disabled={!quizId}
+            >
+                Settings
+            </button>
+        </div>
+    );
 }

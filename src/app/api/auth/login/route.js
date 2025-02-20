@@ -20,5 +20,10 @@ export async function POST(request) {
     }
 
     const token = jwt.sign({ id: user._id, email, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-    return Response.json({ token, user }, { status: 200 });
+    return Response.json({
+        id: user._id.toString(),  // Ensure ID is returned
+        email: user.email,
+        role: user.role,
+        token,
+    }, { status: 200 });
 }

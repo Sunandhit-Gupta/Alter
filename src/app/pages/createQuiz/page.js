@@ -1,31 +1,55 @@
-'use client'
+'use client';
 import AddTimeline from '@/app/components/addTimeline';
 import QuizDetailForm from '@/app/components/quizDetailForm';
 import QuizQuesComp from '@/app/components/quizQuesComp';
 import QuizSettingsComp from '@/app/components/quizSettingsComp';
-import { useState } from 'react';
+import { useSession } from 'next-auth/react';
+import { useEffect, useState } from 'react';
 
 export default function CreateQuiz() {
-        const [isDetailsSelected, setDetailsSelection] = useState(true);
-        const [isQuestionsSelected, setQuestionsSelection] = useState(false);
-        const [isSettingsSelected, setSettingsSelection] = useState(false);
+    const { data: session, status } = useSession();
+    const [quizId, setQuizId] = useState(null);
+    const [isDetailsSelected, setDetailsSelection] = useState(true);
+    const [isQuestionsSelected, setQuestionsSelection] = useState(false);
+    const [isSettingsSelected, setSettingsSelection] = useState(false);
 
-  return (
-    <div>
+    // Check if user is authenticated
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            alert('You must be signed in to create a quiz.');
+            window.location.href = '/auth/login'; // Redirect to sign-in page
+        }
+    }, [status]);
 
-        <AddTimeline
-        isDetailsSelected={isDetailsSelected}
-        setDetailsSelection={setDetailsSelection}
-        isQuestionsSelected={isQuestionsSelected}
-        setQuestionsSelection={setQuestionsSelection}
-        isSettingsSelected={isSettingsSelected}
-        setSettingsSelection={setSettingsSelection}
-        />
+    if (status === 'loading') {
+        return <p>Loading...</p>; // Show loading while checking session
+    }
 
-        {isDetailsSelected &&!isQuestionsSelected &&!isSettingsSelected && <QuizDetailForm/>}
-        {isQuestionsSelected && !isSettingsSelected && <QuizQuesComp/>}
-        {isSettingsSelected && <QuizSettingsComp/>}
+    return (
+        <div>
+            <AddTimeline
+                isDetailsSelected={isDetailsSelected}
+                setDetailsSelection={setDetailsSelection}
+                isQuestionsSelected={isQuestionsSelected}
+                setQuestionsSelection={setQuestionsSelection}
+                isSettingsSelected={isSettingsSelected}
+                setSettingsSelection={setSettingsSelection}
+            />
+
+            {isDetailsSelected && !isQuestionsSelected && !isSettingsSelected && (
+                <QuizDetailForm
+                    setQuizId={setQuizId}
+                    setDetailsSelection={setDetailsSelection}
+                    setQuestionsSelection={setQuestionsSelection}
+                    onNext={() => {
+                      setDetailsSelection(false);  // Hide current form
+                      setQuestionsSelection(true); // Show QuizQuesComp
+                  }}
+                />
+            )}
+
+            {quizId && isQuestionsSelected && !isSettingsSelected && <QuizQuesComp quizId={quizId} />}
+            {quizId && isSettingsSelected && <QuizSettingsComp quizId={quizId} />}
         </div>
-
-  )
+    );
 }

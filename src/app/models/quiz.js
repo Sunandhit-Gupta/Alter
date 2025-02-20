@@ -3,14 +3,14 @@ import mongoose from 'mongoose';
 const quizSchema = new mongoose.Schema({
   quizTitle: { type: String, required: true },
   description: { type: String },
-  duration: { type: Number, required: true }, // In minutes
+  duration: { type: Number, required: true },
   batch: { type: String, required: true },
   courseCode: { type: String, required: true },
   rollRange: {
     from: { type: String },
     to: { type: String }
   },
-  uniqueRolls: [{ type: String }], // Specific roll numbers
+  uniqueRolls: [{ type: String }],
   questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question' }],
   shuffleQuestions: { type: Boolean, default: false },
   status: { type: String, enum: ['Draft', 'Published', 'Ongoing', 'Completed'], default: 'Draft' },
@@ -21,4 +21,7 @@ const quizSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-export default mongoose.model('Quiz', quizSchema);
+// Prevent overwriting the model
+const Quiz = mongoose.models.Quiz || mongoose.model('Quiz', quizSchema);
+
+export default Quiz;
