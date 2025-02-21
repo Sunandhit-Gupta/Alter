@@ -21,7 +21,7 @@ export default function LoginPage() {
         if (result?.error) {
             alert(result.error);
         } else {
-            router.push("/");
+            router.push("/pages/profile");
         }
     };
 

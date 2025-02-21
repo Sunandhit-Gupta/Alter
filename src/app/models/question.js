@@ -15,4 +15,5 @@ const questionSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }
 });
 
-export default mongoose.model('Question', questionSchema);
+// 🟢 Prevent OverwriteModelError
+export default mongoose.models.Question || mongoose.model('Question', questionSchema);
