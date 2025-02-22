@@ -24,6 +24,44 @@ export default function PendingQuiz() {
         }
     };
 
+    // Publish Quiz
+    const handlePublishQuiz = async (quizId) => {
+        try {
+            await axios.put("/api/quiz/publish", { quizId });
+            alert("Quiz published successfully!");
+            fetchPendingQuizzes();
+        } catch (error) {
+            console.error("Failed to publish quiz:", error);
+            alert("Failed to publish quiz.");
+        }
+    };
+
+    // Start Quiz
+    const handleStartQuiz = async (quizId) => {
+        try {
+            await axios.put("/api/quiz/start", { quizId });
+            alert("Quiz started successfully!");
+            fetchPendingQuizzes();
+        } catch (error) {
+            console.error("Failed to start quiz:", error);
+            alert("Failed to start quiz.");
+        }
+    };
+
+    // End Quiz
+    const handleEndQuiz = async (quizId) => {
+        if (confirm("Are you sure you want to end this quiz?")) {
+            try {
+                await axios.put("/api/quiz/end", { quizId });
+                alert("Quiz ended successfully!");
+                fetchPendingQuizzes();
+            } catch (error) {
+                console.error("Failed to end quiz:", error);
+                alert("Failed to end quiz.");
+            }
+        }
+    };
+
     const handleAddQuestions = (quizId) => {
         router.push(`/pages/quiz/add-questions/${quizId}`);
     };
@@ -156,9 +194,37 @@ export default function PendingQuiz() {
                                         <p>{quiz.description}</p>
                                         <p>Course: {quiz.courseCode}</p>
                                         <p>Batch: {quiz.batch}</p>
+                                        <p>Status: <strong>{quiz.status}</strong></p>
                                         <p>Created by: {quiz.createdByName || "Unknown"}</p>
 
                                         <div className="mt-3 flex gap-3">
+                                            {quiz.status === 'Draft' && (
+                                                <button
+                                                    onClick={() => handlePublishQuiz(quiz._id)}
+                                                    className="px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600"
+                                                >
+                                                    🚀 Publish
+                                                </button>
+                                            )}
+
+                                            {quiz.status === 'Published' && (
+                                                <button
+                                                    onClick={() => handleStartQuiz(quiz._id)}
+                                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                                >
+                                                    ▶️ Start
+                                                </button>
+                                            )}
+
+                                            {quiz.status === 'Ongoing' && (
+                                                <button
+                                                    onClick={() => handleEndQuiz(quiz._id)}
+                                                    className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                                                >
+                                                    ⏹️ End
+                                                </button>
+                                            )}
+
                                             <button
                                                 onClick={() => handleAddQuestions(quiz._id)}
                                                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"

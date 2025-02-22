@@ -5,6 +5,8 @@ import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 
 // GET: Fetch Quiz Settings
+// GET: Fetch Quiz Settings
+// GET: Fetch Quiz Settings
 export async function GET(req) {
     try {
         await connectToDatabase();
@@ -26,9 +28,12 @@ export async function GET(req) {
             return NextResponse.json({ message: 'Quiz not found' }, { status: 404 });
         }
 
+        // Send dates in UTC, frontend will convert to local time
         const settings = {
             shuffleQuestions: quiz.shuffleQuestions ?? false,
             duration: quiz.duration ?? 30,
+            startTime: quiz.startTime?.toISOString() ?? null,
+            endTime: quiz.endTime?.toISOString() ?? null
         };
 
         return NextResponse.json({ message: 'Quiz settings fetched successfully', settings });
@@ -38,6 +43,9 @@ export async function GET(req) {
     }
 }
 
+
+
+// PUT: Update Quiz Settings
 // PUT: Update Quiz Settings
 export async function PUT(req) {
     try {
@@ -49,14 +57,26 @@ export async function PUT(req) {
         }
 
         const { quizId, settings } = await req.json();
+        const { shuffleQuestions, duration, startTime } = settings;
 
         if (!quizId) {
             return NextResponse.json({ message: 'Quiz ID is required' }, { status: 400 });
         }
 
+        // Convert frontend timezone (local) to UTC before storing
+        const startUTC = startTime ? new Date(startTime).toISOString() : null;
+        const endUTC = startUTC ? new Date(new Date(startUTC).getTime() + duration * 60 * 1000).toISOString() : null;
+
         const updatedQuiz = await Quiz.findByIdAndUpdate(
             quizId,
-            { $set: { shuffleQuestions: settings.shuffleQuestions, duration: settings.duration } },
+            {
+                $set: {
+                    shuffleQuestions,
+                    duration,
+                    startTime: startUTC,
+                    endTime: endUTC
+                }
+            },
             { new: true }
         );
 
@@ -70,3 +90,4 @@ export async function PUT(req) {
         return NextResponse.json({ message: 'Failed to update quiz settings' }, { status: 500 });
     }
 }
+

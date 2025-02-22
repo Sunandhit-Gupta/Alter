@@ -19,9 +19,10 @@ export async function GET() {
         const userId = session.user.id;
 
         const pendingQuizzes = await Quiz.find({
-            status: 'Draft',
+            status: { $in: ['Draft', 'Published', 'Ongoing'] },
             createdBy: userId
         }).lean();
+
 
         const user = await User.findById(userId);
 
