@@ -1,69 +1,71 @@
-import Quiz from "@/app/models/quiz";
+import Question from "@/app/models/question";
 import StudentResponse from "@/app/models/studentResponse";
 import User from "@/app/models/user";
 import { connectToDatabase } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
-// POST: Submit quiz answers and calculate score
 export async function POST(req) {
-    const { quizId, answers, studentEmail } = await req.json();
-
-    if (!quizId || !answers || !studentEmail) {
-        return NextResponse.json({ message: "Missing required fields." }, { status: 400 });
-    }
-
     try {
-        await connectToDatabase();
-
-        // Fetch user and quiz
-        const user = await User.findOne({ email: studentEmail });
-        const quiz = await Quiz.findById(quizId).populate("questions");
-
-        if (!user || !quiz) {
-            return NextResponse.json({ message: "User or quiz not found." }, { status: 404 });
+        const { quizId, responses, studentEmail } = await req.json();
+        if (!quizId || !responses || !studentEmail) {
+            return NextResponse.json({ success: false, message: "Missing required fields." }, { status: 400 });
         }
 
-        const rollNumber = user.rollNumber;
+        await connectToDatabase();
+
+        // 🟢 Get student details
+        const student = await User.findOne({ email: studentEmail });
+        if (!student) {
+            return NextResponse.json({ success: false, message: "Student not found." }, { status: 404 });
+        }
+
+        const rollNumber = student.rollNumber;
+        const studentId = student._id;
         let totalAutoScore = 0;
 
-        // Prepare responses with auto-scoring
-        const responses = quiz.questions.map((question) => {
-            const givenAnswer = answers[question._id] || [];
-            const isCorrect = question.correctAnswer.every((ans) =>
-                givenAnswer.includes(ans)
-            );
+        // 🟢 Process Each Response
+        const responseArray = await Promise.all(
+            Object.entries(responses).map(async ([questionId, givenAnswer]) => {
+                const question = await Question.findById(questionId);
+                let autoScore = 0;
 
-            const autoScore = isCorrect ? 1 : 0;
-            totalAutoScore += autoScore;
+                if (question?.type === "Single Correct MCQ") {
+                    if (question.correctAnswers.includes(givenAnswer[0])) autoScore = question.points;
+                }
 
-            return {
-                questionId: question._id,
-                givenAnswer,
-                autoScore,
-                finalScore: autoScore,
-                feedback: ""
-            };
-        });
+                if (question?.type === "Multiple Correct MCQ") {
+                    const correctSet = new Set(question.correctAnswers);
+                    const givenSet = new Set(givenAnswer);
+                    const isCorrect = givenSet.size === correctSet.size && [...givenSet].every((ans) => correctSet.has(ans));
+                    if (isCorrect) autoScore = question.points;
+                }
 
-        // Store response in the database
-        const studentResponse = new StudentResponse({
+                return {
+                    questionId,
+                    givenAnswer,
+                    autoScore,
+                    finalScore: autoScore,
+                };
+            })
+        );
+
+        totalAutoScore = responseArray.reduce((sum, r) => sum + r.autoScore, 0);
+
+        // 🟢 Save Student Response
+        const newResponse = new StudentResponse({
             quizId,
-            studentId: user._id,
+            studentId,
             rollNumber,
-            responses,
+            responses: responseArray,
             totalAutoScore,
             totalFinalScore: totalAutoScore,
-            submittedAt: new Date()
         });
 
-        await studentResponse.save();
+        await newResponse.save();
 
-        return NextResponse.json({
-            message: "Quiz submitted successfully!",
-            totalAutoScore
-        });
+        return NextResponse.json({ success: true, message: "Quiz submitted successfully." });
     } catch (error) {
         console.error("Failed to submit quiz:", error);
-        return NextResponse.json({ message: "Failed to submit quiz.", error }, { status: 500 });
+        return NextResponse.json({ success: false, message: "Failed to submit quiz." }, { status: 500 });
     }
 }

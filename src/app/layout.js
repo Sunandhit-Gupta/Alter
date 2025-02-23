@@ -13,8 +13,6 @@ function AuthGuard({ children }) {
     useEffect(() => {
         if (status === "unauthenticated") {
             router.push("/auth/login");
-        }else{
-            router.push("/pages/profile");
         }
     }, [status, router]);
 

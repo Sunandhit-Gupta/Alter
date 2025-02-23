@@ -18,4 +18,4 @@ const responseSchema = new mongoose.Schema({
   submittedAt: { type: Date, default: Date.now }
 });
 
-export default mongoose.model('StudentResponse', responseSchema);
+export default mongoose.models.StudentResponse || mongoose.model('StudentResponse', responseSchema);

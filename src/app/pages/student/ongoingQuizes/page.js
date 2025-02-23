@@ -12,7 +12,6 @@ export default function OngoingQuizes() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    // Fetch ongoing quizzes
     useEffect(() => {
         const fetchQuizzes = async () => {
             if (!session?.user?.email) return;
@@ -39,9 +38,8 @@ export default function OngoingQuizes() {
         fetchQuizzes();
     }, [session]);
 
-    // Navigate to the Take Test page
     const handleTakeTest = (quizId) => {
-        router.push(`/student/takeTest?quizId=${quizId}`);
+        router.push(`/pages/student/takeTest?quizId=${quizId}`);
     };
 
     if (loading) return <p>Loading ongoing quizzes...</p>;
