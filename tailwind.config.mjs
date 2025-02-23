@@ -8,8 +8,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
+        primary: "#16a34a", // Elegant Green
+        secondary: "#1e293b", // Dark gray for contrast
+        textDark: "#1e293b", // Dark text for readability
+        textLight: "#64748b", // Muted gray for subtle details
+        borderGray: "#e2e8f0", // Soft border color
+      },
+      fontFamily: {
+        sans: ["Inter", "sans-serif"],
       },
     },
   },
