@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function OngoingQuizes() {
+export default function OngoingQuizzes() {
     const { data: session } = useSession();
     const router = useRouter();
     const [quizzes, setQuizzes] = useState([]);
@@ -17,16 +17,16 @@ export default function OngoingQuizes() {
             if (!session?.user?.email) return;
 
             try {
+                const userRes = await axios.get(`/api/user/submittedQuizzes?email=${session.user.email}`);
+                const submittedQuizzes = userRes.data?.submittedQuizzes || [];
+
                 const rollRes = await axios.get(`/api/user/rollNumber?email=${session.user.email}`);
                 const rollNumber = rollRes.data?.rollNumber;
 
-                if (!rollNumber) {
-                    setError("Failed to fetch roll number.");
-                    return;
-                }
-
                 const quizRes = await axios.get(`/api/quiz/ongoing?rollNumber=${rollNumber}`);
-                setQuizzes(quizRes.data);
+                const filteredQuizzes = quizRes.data.filter((quiz) => !submittedQuizzes.includes(quiz._id));
+
+                setQuizzes(filteredQuizzes);
             } catch (err) {
                 console.error("Failed to fetch ongoing quizzes:", err);
                 setError("Failed to load ongoing quizzes.");
@@ -58,9 +58,10 @@ export default function OngoingQuizes() {
                             <p>Course Code: {quiz.courseCode}</p>
                             <p>Batch: {quiz.batch}</p>
                             <p>Started at: {new Date(quiz.startTime).toLocaleString()}</p>
+
                             <button
                                 onClick={() => handleTakeTest(quiz._id)}
-                                className="mt-2 bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+                                className="mt-2 p-2 bg-blue-500 hover:bg-blue-600 text-white rounded"
                             >
                                 Take Test
                             </button>

@@ -1,5 +1,5 @@
-import { connectToDatabase } from '@/lib/mongodb';
 import User from '@/app/models/user';
+import { connectToDatabase } from '@/lib/mongodb';
 import bcrypt from 'bcryptjs';
 
 export async function POST(request) {
@@ -19,7 +19,8 @@ export async function POST(request) {
         role,
         rollNumber,
         batch,
-        courseCodes: Array.isArray(courseCodes) ? courseCodes : (courseCodes?.split(',') || [])
+        courseCodes: Array.isArray(courseCodes) ? courseCodes : (courseCodes?.split(',') || []),
+        submittedQuizzes: [] // ✅ Ensure the default array is set explicitly
     });
 
     await newUser.save();

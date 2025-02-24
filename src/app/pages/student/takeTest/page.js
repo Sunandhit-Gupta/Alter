@@ -14,27 +14,58 @@ export default function TakeTestPage() {
     const [questions, setQuestions] = useState([]);
     const [responses, setResponses] = useState({});
     const [error, setError] = useState("");
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [loading, setLoading] = useState(true);
 
-    // 🟢 Fetch Quiz Questions
+    // 🔍 Check if Quiz is Already Submitted
+    useEffect(() => {
+        const checkSubmission = async () => {
+            try {
+                const res = await axios.get(`/api/user/submittedQuizzes?email=${session?.user?.email}`);
+                const submittedQuizIds = res.data?.submittedQuizzes || [];
+
+                if (submittedQuizIds.includes(quizId)) {
+                    setIsSubmitted(true);
+                }
+            } catch (err) {
+                console.error("Failed to check submission:", err);
+            }
+        };
+
+        if (quizId && session?.user?.email) checkSubmission();
+    }, [quizId, session]);
+
+    // 📝 Fetch Quiz Questions
     useEffect(() => {
         const fetchQuestions = async () => {
+            if (isSubmitted) return;
+
             try {
                 const res = await axios.get(`/api/quiz/${quizId}/questions`);
                 if (res.data.success) {
                     setQuestions(res.data.questions);
+
+                    // ✅ Initialize responses properly
+                    const initialResponses = {};
+                    res.data.questions.forEach((q) => {
+                        initialResponses[q._id] = [];
+                    });
+                    setResponses(initialResponses);
                 } else {
                     setError(res.data.message);
                 }
             } catch (err) {
                 console.error("Failed to fetch questions:", err);
                 setError("Failed to load quiz questions.");
+            } finally {
+                setLoading(false);
             }
         };
 
         if (quizId) fetchQuestions();
-    }, [quizId]);
+    }, [quizId, isSubmitted]);
 
-    // 🟢 Handle Single & Multiple Choice Answers
+    // 🟢 Handle Answer Change
     const handleAnswerChange = (questionId, answer, type) => {
         setResponses((prev) => {
             const current = prev[questionId] || [];
@@ -50,76 +81,80 @@ export default function TakeTestPage() {
                 return { ...prev, [questionId]: updatedAnswers };
             }
 
-            return { ...prev, [questionId]: [answer] }; // Subjective
+            return { ...prev, [questionId]: [answer] };
         });
     };
 
-    // 🟢 Submit Quiz
+    // 🚀 Submit Quiz
     const handleSubmitQuiz = async () => {
-        if (Object.keys(responses).length !== questions.length) {
-            alert("Please answer all questions before submitting.");
+        const unanswered = questions.filter((q) => !responses[q._id]?.length);
+        if (unanswered.length) {
+            alert(`Please answer all questions before submitting.`);
             return;
         }
 
         try {
-            const res = await axios.post("/api/quiz/student/submit", {
+            const res = await axios.post("/api/quiz/submitted", {
                 quizId,
                 responses,
                 studentEmail: session?.user?.email,
             });
 
             if (res.data.success) {
-                alert("Quiz submitted successfully!");
+                alert("✅ Quiz submitted successfully!");
                 router.push("/pages/student/history");
             } else {
-                alert(res.data.message || "Failed to submit quiz.");
+                alert(res.data.message || "❌ Failed to submit quiz.");
             }
         } catch (err) {
             console.error("Failed to submit quiz:", err);
-            alert("Failed to submit the quiz.");
+            alert("⚠️ Error submitting the quiz.");
         }
     };
 
-    if (error) return <p className="text-red-500">{error}</p>;
-    if (!questions.length) return <p>Loading questions...</p>;
+    if (loading) return <p>🔄 Loading questions...</p>;
+    if (isSubmitted) return <p className="text-red-500">✅ You have already submitted this quiz.</p>;
+    if (error) return <p className="text-red-500">⚠️ {error}</p>;
+    if (!questions.length) return <p>❌ No questions found for this quiz.</p>;
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">Take Test</h1>
+            <h1 className="text-2xl font-bold mb-4">📝 Take Test</h1>
 
             {questions.map((question) => (
                 <div key={question._id} className="mb-6">
                     <p className="font-medium">{question.text}</p>
 
-                    {question.type === "Single Correct MCQ" && (
+                    {/* ✅ Single Correct MCQ */}
+                    {question.type === "Single Correct MCQ" &&
                         question.options.map((option) => (
                             <label key={option} className="block">
                                 <input
                                     type="radio"
                                     name={`question-${question._id}`}
                                     value={option}
-                                    checked={responses[question._id]?.includes(option)}
+                                    checked={responses[question._id]?.includes(option) || false}
                                     onChange={() => handleAnswerChange(question._id, option, question.type)}
                                 />
                                 {option}
                             </label>
-                        ))
-                    )}
+                        ))}
 
-                    {question.type === "Multiple Correct MCQ" && (
+                    {/* ✅ Multiple Correct MCQ */}
+                    {question.type === "Multiple Correct MCQ" &&
                         question.options.map((option) => (
                             <label key={option} className="block">
                                 <input
                                     type="checkbox"
                                     value={option}
-                                    checked={responses[question._id]?.includes(option)}
+                                    checked={responses[question._id]?.includes(option) || false}
                                     onChange={() => handleAnswerChange(question._id, option, question.type)}
                                 />
                                 {option}
                             </label>
-                        ))
-                    )}
+                        ))}
 
+                    {/* ✅ Subjective Answer */}
                     {question.type === "Subjective" && (
                         <textarea
                             className="w-full p-2 border rounded"
