@@ -1,12 +1,14 @@
 "use client";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { usePathname } from "next/navigation"; // Import usePathname
 import { useState } from "react";
 import { FaUser, FaBars, FaSun, FaMoon, FaSignOutAlt } from "react-icons/fa";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
-  const userRole = session?.user?.role || "student"; // Default to "student"
+  const pathname = usePathname(); // Get the current route
+  const userRole = session?.user?.role || "student"; // Default role: student
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -22,6 +24,7 @@ export default function Navbar() {
     document.documentElement.classList.toggle("dark");
   };
 
+  // Define navigation items based on role
   const navItems = userRole === "student"
     ? [
         { href: "/pages/student/history", label: "History" },
@@ -33,8 +36,6 @@ export default function Navbar() {
         { href: "/pages/createQuiz", label: "Create Quiz" },
         { href: "/pages/pendingQuiz", label: "Pending Quiz" },
       ];
-
-  const linkStyles = "cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition duration-300 rounded-md p-2 text-gray-800 dark:text-white";
 
   return (
     <nav className="bg-white dark:bg-gray-800 shadow-md p-4">
@@ -48,9 +49,17 @@ export default function Navbar() {
         {/* Links for larger screens */}
         <div className="hidden md:flex space-x-6">
           {navItems.map((item, index) => (
-            <div key={index} className={linkStyles}>
-              <Link href={item.href}>{item.label}</Link>
-            </div>
+            <Link
+              key={index}
+              href={item.href}
+              className={`cursor-pointer transition duration-300 rounded-md p-2 ${
+                pathname === item.href
+                  ? "bg-gray-300 dark:bg-gray-700 text-black dark:text-white font-semibold"
+                  : "text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              {item.label}
+            </Link>
           ))}
         </div>
 
@@ -108,11 +117,18 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden mt-4 space-y-2">
           {navItems.map((item, index) => (
-            <div key={index} className={linkStyles}>
-              <Link href={item.href} onClick={() => setIsMenuOpen(false)}>
-                {item.label}
-              </Link>
-            </div>
+            <Link
+              key={index}
+              href={item.href}
+              onClick={() => setIsMenuOpen(false)}
+              className={`block p-2 rounded-md transition duration-300 ${
+                pathname === item.href
+                  ? "bg-gray-300 dark:bg-gray-700 text-black dark:text-white font-semibold"
+                  : "text-gray-800 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+            >
+              {item.label}
+            </Link>
           ))}
         </div>
       )}
