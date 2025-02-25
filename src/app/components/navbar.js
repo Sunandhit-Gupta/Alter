@@ -40,10 +40,10 @@ export default function Navbar() {
     <nav className="bg-white dark:bg-gray-800 shadow-md p-4">
       <div className="container mx-auto flex justify-between items-center">
         {/* Logo */}
-        <div className="group flex items-center font-bold text-3xl font-sans">
+        <Link href="/" className="group flex items-center font-bold text-3xl font-sans">
           <span className="text-[#4A90E2] group-hover:text-[#FF6F61]">Quiz</span>
           <span className="text-[#FF6F61] ml-1 group-hover:text-[#4A90E2]">Mate</span>
-        </div>
+        </Link>
 
         {/* Links for larger screens */}
         <div className="hidden md:flex space-x-6">
