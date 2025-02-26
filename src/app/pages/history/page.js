@@ -3,12 +3,14 @@
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation"; // 🚀 Import router for navigation
 
 export default function TeacherQuizHistory() {
     const { data: session } = useSession();
     const [quizzes, setQuizzes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const router = useRouter(); // ✅ Use router for navigation
 
     useEffect(() => {
         const fetchTeacherHistory = async () => {
@@ -64,6 +66,14 @@ export default function TeacherQuizHistory() {
                             <p className="text-gray-700">👨‍🎓 Students Attempted: <strong>{quiz.studentCount}</strong></p>
                             <p className="text-gray-700">🏆 Avg. Final Score: <strong>{quiz.avgFinalScore}</strong></p>
                             <p className="text-gray-700">📅 Created At: <strong>{new Date(quiz.createdAt).toLocaleString()}</strong></p>
+
+                            {/* 🚀 View Details Button */}
+                            <button
+                                onClick={() => router.push(`/pages/quiz/details/${quiz._id}`)}
+                                className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700"
+                            >
+                                View Details
+                            </button>
                         </li>
                     ))}
                 </ul>
@@ -73,3 +83,4 @@ export default function TeacherQuizHistory() {
         </div>
     );
 }
+// /quiz/details/${quiz._id}
