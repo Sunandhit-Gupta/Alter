@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import Navbar from "./components/navbar";
 import "./globals.css";
 
+
+
 function AuthGuard({ children }) {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -32,7 +34,7 @@ export default function RootLayout({ children }) {
             <html>
                 <body>
                     <AuthGuard>{children}</AuthGuard>
-                    
+
                 </body>
             </html>
         </SessionProvider>
