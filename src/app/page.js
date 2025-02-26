@@ -27,10 +27,28 @@ export default function Home() {
     fetchUserData();
   }, [session]);
 
+  // Skeleton Component
+  const SkeletonCard = () => (
+    <div className="bg-gray-200 p-6 rounded-lg shadow-md animate-pulse">
+      <div className="h-6 w-3/4 bg-gray-300 rounded mb-2"></div>
+      <div className="h-4 w-full bg-gray-300 rounded mb-4"></div>
+      <div className="h-4 w-1/3 bg-gray-300 rounded"></div>
+    </div>
+  );
+
+  const SkeletonHeader = () => (
+    <div className="h-8 w-1/3 bg-gray-300 rounded mb-6 animate-pulse"></div>
+  );
+
   if (status === "loading" || loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-600">Loading...</p>
+      <div className="container mx-auto p-4">
+        <SkeletonHeader />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       </div>
     );
   }
