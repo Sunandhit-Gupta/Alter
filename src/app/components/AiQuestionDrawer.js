@@ -23,6 +23,7 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
                     text: question,
                     options: options.map((opt) => opt.text), // Extracting option texts
                     correctAnswers,
+                    type: correctAnswers.length > 1 ? "Multiple Correct MCQ" : "Single Correct MCQ",
                 });
             } else {
                 alert("⚠️ Invalid response from AI.");

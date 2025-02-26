@@ -28,6 +28,7 @@ export default function QuizQuesComp({ quizId }) {
         if (quizId) fetchQuestions();
     }, [quizId]);
 
+
     const handleAddQuestion = (type) => {
         setNewQuestion({
             type,
@@ -37,6 +38,33 @@ export default function QuizQuesComp({ quizId }) {
         });
         setShowPopup(false);
     };
+
+
+const handleDeleteQuestion = async (questionIdentifier) => {
+    if (!questionIdentifier) return; // Safety check
+
+    if (typeof questionIdentifier === "string") {
+        // It's a saved question (has _id), delete from DB
+        try {
+            const response = await axios.delete(`/api/quiz/delete-question`, {
+                data: { quizId, questionId: questionIdentifier }
+            });
+
+            if (response.data.success) {
+                alert("🗑️ Question deleted successfully!");
+            } else {
+                alert("❌ Failed to delete question.");
+            }
+        } catch (error) {
+            console.error("Error deleting question:", error);
+            alert("⚠️ An error occurred while deleting the question.");
+        }
+    }
+
+    // Remove from local state (works for both saved & unsaved)
+    setQuestions(questions.filter((q, index) => q._id !== questionIdentifier && index !== questionIdentifier));
+};
+
 
     const handleSaveQuestion = () => {
         if (!newQuestion.text.trim()) {
@@ -100,7 +128,7 @@ export default function QuizQuesComp({ quizId }) {
     return (
         <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg relative">
             <h2 className="text-2xl font-bold mb-4 text-center">Quiz Questions</h2>
-            <QuestionList questions={questions} />
+            <QuestionList questions={questions} handleDelete={handleDeleteQuestion} />
             <QuestionPopup showPopup={showPopup} setShowPopup={setShowPopup} handleAddQuestion={handleAddQuestion} />
             <QuestionForm newQuestion={newQuestion} setNewQuestion={setNewQuestion} handleSaveQuestion={handleSaveQuestion} />
 

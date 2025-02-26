@@ -4,11 +4,11 @@ import { NextResponse } from 'next/server';
 
 export async function GET(req, context) {
     try {
-        // Await params to ensure they are available
-        const { params } = await context;
+        // ✅ Await context.params properly
+        const params = await context.params;
 
         if (!params?.quizId) {
-            console.error("🚨 Missing params:", context);
+            console.error("🚨 Missing params:", params);
             return NextResponse.json({ success: false, message: 'Quiz ID is required.' }, { status: 400 });
         }
 

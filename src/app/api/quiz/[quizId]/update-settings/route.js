@@ -2,8 +2,8 @@ import Quiz from "@/app/models/quiz";
 import { connectToDatabase } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
 
-export async function PUT(req, { params }) {
-    const { quizId } = params;
+export async function PUT(req, context) {
+    const { quizId } = await context.params;
     const { shuffleQuestions, duration } = await req.json();
 
     if (!quizId) {
