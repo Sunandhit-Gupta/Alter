@@ -1,15 +1,16 @@
 "use client";
 import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { usePathname } from "next/navigation"; // Import usePathname
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { FaBars, FaMoon, FaSignOutAlt, FaSun, FaUser } from "react-icons/fa";
 import NetworkStatus from "./NetworkStatus";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
-  const pathname = usePathname(); // Get the current route
-  const userRole = session?.user?.role || "student"; // Default role: student
+  const pathname = usePathname();
+  const userRole = session?.user?.role || "student";
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -25,7 +26,6 @@ export default function Navbar() {
     document.documentElement.classList.toggle("dark");
   };
 
-  // Define navigation items based on role
   const navItems = userRole === "student"
     ? [
         { href: "/pages/student/history", label: "History" },
@@ -66,10 +66,9 @@ export default function Navbar() {
 
         {/* Right-side controls */}
         <div className="flex items-center space-x-4">
-
-          {/* Network Status Indicator */}
-          <NetworkStatus />
-
+           {/* Network Status Indicator */}
+           <NetworkStatus />
+           
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
@@ -106,6 +105,8 @@ export default function Navbar() {
               </div>
             )}
           </div>
+
+
 
           {/* Hamburger Menu for smaller screens */}
           <button

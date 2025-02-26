@@ -84,11 +84,22 @@ const handleDeleteQuestion = async (questionIdentifier) => {
             alert("Quiz ID not found. Please create the quiz first.");
             return;
         }
+
+        // Filter out questions that already exist in the database (have _id)
+        const newQuestions = questions.filter(q => !q._id);
+
+        if (newQuestions.length === 0) {
+            alert("✅ No new questions to submit!");
+            setShowSettings(true);
+            return;
+        }
+
         try {
             const response = await axios.post("/api/quiz/add-questions", {
                 quizId,
-                questions,
+                questions: newQuestions, // Only send new questions
             });
+
             if (response.data.success) {
                 alert("✅ Questions submitted successfully!");
                 setShowSettings(true);
@@ -116,10 +127,21 @@ const handleDeleteQuestion = async (questionIdentifier) => {
         }
     };
 
-    const handleAddAiQuestion = (question) => {
-        setQuestions([...questions, question]);
-        setShowDrawer(false);
+    const handleAddAiQuestion = (newQuestions) => {
+        if (!Array.isArray(newQuestions)) {
+            newQuestions = [newQuestions];
+        }
+
+        // Ensure options are only text
+        const formattedQuestions = newQuestions.map((q) => ({
+            ...q,
+            options: q.options.map((opt) => (typeof opt === "object" ? opt.text : opt)),
+        }));
+
+        setQuestions((prevQuestions) => [...prevQuestions, ...formattedQuestions]);
     };
+
+
 
     if (showSettings) {
         return <QuizSettingsComp onSubmit={handleSubmitSettings} quizId={quizId} />;

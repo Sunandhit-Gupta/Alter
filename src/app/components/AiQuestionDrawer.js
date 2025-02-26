@@ -4,10 +4,10 @@ import { useState } from "react";
 
 export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
     const [prompt, setPrompt] = useState("");
-    const [aiQuestion, setAiQuestion] = useState(null);
+    const [aiQuestions, setAiQuestions] = useState([]); // Store multiple questions
     const [loading, setLoading] = useState(false);
 
-    const fetchAiQuestion = async () => {
+    const fetchAiQuestions = async () => {
         if (!prompt.trim()) {
             alert("Please enter a prompt!");
             return;
@@ -18,65 +18,96 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
             const response = await axios.post("/api/quiz/generate-question", { prompt });
 
             if (response.data.data) {
-                const { question, options, correctAnswers } = response.data.data;
-                setAiQuestion({
-                    text: question,
-                    options: options.map((opt) => opt.text), // Extracting option texts
-                    correctAnswers,
-                    type: correctAnswers.length > 1 ? "Multiple Correct MCQ" : "Single Correct MCQ",
-                });
+                const structuredQuestions = response.data.data;
+
+                console.log(structuredQuestions);
+                // Ensure structuredQuestions.questions exists and is an array
+                if (!Array.isArray(structuredQuestions) || !structuredQuestions) {
+                    throw new Error("Invalid response format: questions not found.");
+                }
+
+                // Map the received questions properly
+                const parsedQuestions = structuredQuestions.map((q, index) => ({
+                    id: index + 1,
+                    text: q.text,
+                    options: Array.isArray(q.options) ? q.options.map((opt, idx) => ({ id: idx + 1, text: opt.text })) : [],
+                    correctAnswers: Array.isArray(q.correctAnswers) ? q.correctAnswers : [],
+                    type: q.type,
+                }));
+
+                setAiQuestions(parsedQuestions); // Store multiple questions properly
             } else {
                 alert("⚠️ Invalid response from AI.");
             }
         } catch (error) {
-            console.error("Error fetching AI question:", error);
-            alert("⚠️ Failed to generate question. Try again.");
+            console.error("Error fetching AI questions:", error);
+            alert("⚠️ Failed to generate questions. Try again.");
         }
         setLoading(false);
     };
 
+
     return (
-        <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-lg p-6 transition-transform duration-300">
-            <h2 className="text-xl font-bold mb-4">Generate AI Question</h2>
-            <input
-                type="text"
-                className="w-full p-2 border rounded"
-                placeholder="Enter prompt..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-            />
-            <button
-                className="mt-3 bg-blue-500 text-white px-4 py-2 rounded"
-                onClick={fetchAiQuestion}
-                disabled={loading}
-            >
-                {loading ? "Generating..." : "Generate Question"}
-            </button>
+        <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-lg transition-transform duration-300 flex flex-col">
+            {/* Header Section */}
+            <div className="p-6 border-b flex justify-between items-center bg-white">
+                <h2 className="text-xl font-bold">Generate AI Questions</h2>
+                <button className="text-red-500 font-bold" onClick={onClose}>
+                    ✖
+                </button>
+            </div>
 
-            {aiQuestion && (
-                <div className="mt-4 p-4 border rounded bg-gray-100">
-                    <p className="font-semibold">{aiQuestion.text}</p>
-                    <ul className="mt-2">
-                        {aiQuestion.options.map((opt, i) => (
-                            <li key={i} className={`p-2 rounded ${aiQuestion.correctAnswers.includes(opt) ? "bg-green-200" : ""}`}>
-                                {opt}
-                            </li>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+                <input
+                    type="text"
+                    className="w-full p-2 border rounded"
+                    placeholder="Enter prompt..."
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                />
+                <button
+                    className="mt-3 bg-blue-500 text-white px-4 py-2 rounded w-full"
+                    onClick={fetchAiQuestions}
+                    disabled={loading}
+                >
+                    {loading ? "Generating..." : "Generate Questions"}
+                </button>
+
+                {aiQuestions.length > 0 && (
+                    <div className="mt-4 space-y-4">
+                        {aiQuestions.map((question, qIndex) => (
+                            <div key={qIndex} className="p-4 border rounded bg-gray-100">
+                                <p className="font-semibold">{question.text}</p>
+                                <ul className="mt-2">
+                                    {question.options.map((opt, i) => (
+                                        <li key={i} className={`p-2 rounded ${question.correctAnswers.includes(opt.text) ? "bg-green-200" : ""}`}>
+                                            {opt.text}
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button
+                                    className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
+                                    onClick={() => onAddQuestion(question)}
+                                >
+                                    ✅ Add to Quiz
+                                </button>
+                            </div>
                         ))}
-                    </ul>
-                    <div className="mt-4 flex justify-between">
-                        <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={() => onAddQuestion(aiQuestion)}>
-                            ✅ Add to Quiz
-                        </button>
-                        <button className="bg-yellow-500 text-white px-4 py-2 rounded" onClick={fetchAiQuestion}>
-                            🔄 Next
-                        </button>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
 
-            <button className="mt-6 block text-red-500 font-bold" onClick={onClose}>
-                Close
-            </button>
+            {/* "Next" Button */}
+            <div className="p-6 border-t bg-white">
+                <button
+                    className="bg-yellow-500 text-white px-4 py-2 rounded w-full"
+                    onClick={fetchAiQuestions}
+                    disabled={loading}
+                >
+                    🔄 Next Questions
+                </button>
+            </div>
         </div>
     );
 }

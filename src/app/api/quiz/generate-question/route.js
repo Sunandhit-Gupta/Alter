@@ -9,15 +9,29 @@ export async function POST(req) {
             return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
         }
 
-        // Structured prompt to get a properly formatted JSON response
+        // Modify the structured prompt to request multiple questions
         const structuredPrompt = `
-        Generate a multiple-choice quiz question based on: "${prompt}".
-        The response should be **strictly** in this JSON format inside triple backticks:
+        Generate **3 multiple-choice quiz questions or theory questions** based on: "${prompt}".
+        Each question should follow this JSON format inside triple backticks:
         \`\`\`json
         {
-            "question": "Generated question here",
-            "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correctAnswers": ["Correct Option"]
+            "questions": [
+                {
+                    "question": "Generated question 1",
+                    "options": ["Option A", "Option B", "Option C", "Option D"],
+                    "correctAnswers": ["Correct Option"]
+                },
+                {
+                    "question": "Generated question 2",
+                    "options": ["Option A", "Option B", "Option C", "Option D"],
+                    "correctAnswers": ["Correct Option"]
+                },
+                {
+                    "question": "Generated question 3",
+                    "options": ["Option A", "Option B", "Option C", "Option D"],
+                    "correctAnswers": ["Correct Option"]
+                }
+            ]
         }
         \`\`\`
         Ensure that the correct answer(s) exist in the options.
@@ -39,16 +53,16 @@ export async function POST(req) {
 
         if (!generatedText) {
             console.error("❌ No response from AI");
-            return NextResponse.json({ error: "Failed to generate a question" }, { status: 500 });
+            return NextResponse.json({ error: "Failed to generate questions" }, { status: 500 });
         }
 
         // **Fix: Remove the enclosing triple backticks and "json" label**
         generatedText = generatedText.replace(/^```json|```$/g, "").trim();
 
         // Parse the extracted JSON
-        let structuredQuestion;
+        let structuredQuestions;
         try {
-            structuredQuestion = JSON.parse(generatedText);
+            structuredQuestions = JSON.parse(generatedText);
         } catch (parseError) {
             console.error("❌ AI response parsing error:", parseError);
             console.error("❌ AI raw output:", generatedText);
@@ -56,30 +70,23 @@ export async function POST(req) {
         }
 
         // Validate the response
-        if (
-            !structuredQuestion.question ||
-            !Array.isArray(structuredQuestion.options) ||
-            !Array.isArray(structuredQuestion.correctAnswers) ||
-            structuredQuestion.options.length < 2 ||
-            structuredQuestion.correctAnswers.length === 0
-        ) {
-            console.error("❌ Invalid AI-generated structure:", structuredQuestion);
-            return NextResponse.json({ error: "Generated question is not in the expected format" }, { status: 500 });
+        if (!structuredQuestions.questions || !Array.isArray(structuredQuestions.questions) || structuredQuestions.questions.length === 0) {
+            console.error("❌ Invalid AI-generated structure:", structuredQuestions);
+            return NextResponse.json({ error: "Generated questions are not in the expected format" }, { status: 500 });
         }
 
         // Format the response properly for frontend
-        const parsedQuestion = {
-            question: structuredQuestion.question,
-            options: structuredQuestion.options.map((opt, index) => ({
-                id: index + 1,
-                text: opt,
-            })),
-            correctAnswers: structuredQuestion.correctAnswers,
-        };
-        
-        return NextResponse.json({ success: true, data: parsedQuestion });
+        const parsedQuestions = structuredQuestions.questions.map((q, index) => ({
+            id: index + 1,
+            text: q.question,
+            options: q.options.map((opt, idx) => ({ id: idx + 1, text: opt })),
+            correctAnswers: q.correctAnswers,
+            type: q.correctAnswers.length > 1 ? "Multiple Correct MCQ" : "Single Correct MCQ",
+        }));
+
+        return NextResponse.json({ success: true, data: parsedQuestions });
     } catch (error) {
-        console.error("❌ Error generating question:", error);
+        console.error("❌ Error generating questions:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

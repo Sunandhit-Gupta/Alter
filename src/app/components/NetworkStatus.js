@@ -1,59 +1,96 @@
+"use client";
 import { useEffect, useState } from "react";
-import { FaWifi } from "react-icons/fa";
 
 export default function NetworkStatus() {
-    const [networkStrength, setNetworkStrength] = useState("Checking...");
-    const [downlink, setDownlink] = useState(null);
-    const [effectiveType, setEffectiveType] = useState("unknown");
+  const [isOnline, setIsOnline] = useState(typeof window !== "undefined" ? navigator.onLine : true);
+  const [networkStrength, setNetworkStrength] = useState("unknown");
 
-    useEffect(() => {
-        const updateNetworkStatus = () => {
-            if (navigator.connection) {
-                const { downlink, effectiveType } = navigator.connection;
-                setDownlink(downlink);
-                setEffectiveType(effectiveType);
-
-                let strength = "Strong";
-                if (effectiveType === "3g" || downlink < 2) strength = "Moderate";
-                if (effectiveType === "2g" || downlink < 0.5) strength = "Weak";
-
-                setNetworkStrength(strength);
-
-                if (strength === "Moderate" || strength === "Weak") {
-                    alert(`⚠️ Your network connection is ${strength}. Some features may not work smoothly.`);
-                }
-            } else {
-                setNetworkStrength("Network API not supported");
-            }
-        };
-
-        updateNetworkStatus();
-        navigator.connection?.addEventListener("change", updateNetworkStatus);
-
-        return () => {
-            navigator.connection?.removeEventListener("change", updateNetworkStatus);
-        };
-    }, []);
-
-    const getIndicatorColor = () => {
-        switch (networkStrength) {
-            case "Strong":
-                return "text-green-500";
-            case "Moderate":
-                return "text-yellow-500";
-            case "Weak":
-                return "text-red-500";
-            default:
-                return "text-gray-500";
-        }
+  useEffect(() => {
+    const updateNetworkStatus = () => {
+      setIsOnline(navigator.onLine);
+      if (!navigator.onLine) {
+        setNetworkStrength("disconnected");
+      } else {
+        updateNetworkStrength();
+      }
     };
 
-    return (
-        <div className="flex items-center space-x-2 text-sm">
-            <FaWifi className={`text-lg ${getIndicatorColor()}`} />
-            <span className={`${getIndicatorColor()} font-medium hidden md:block`}>
-                {networkStrength}
-            </span>
-        </div>
-    );
+    const updateNetworkStrength = () => {
+      if (!navigator.onLine) {
+        setNetworkStrength("disconnected");
+        return;
+      }
+
+      if ("connection" in navigator && navigator.connection) {
+        let downlink = navigator.connection.downlink;
+        let effectiveType = navigator.connection.effectiveType;
+
+        console.log("downlink", downlink);
+        console.log("effectiveType", effectiveType);
+        if (downlink && effectiveType) {
+          if (downlink < 1 || effectiveType === "slow-2g" || effectiveType === "2g") {
+            setNetworkStrength("weak");
+          } else if (downlink < 5 || effectiveType === "3g") {
+            setNetworkStrength("medium");
+          } else {
+            setNetworkStrength("strong");
+          }
+        } else {
+          setNetworkStrength("unknown");
+        }
+      } else {
+        setNetworkStrength("unknown");
+      }
+    };
+
+    updateNetworkStatus();
+    window.addEventListener("online", updateNetworkStatus);
+    window.addEventListener("offline", updateNetworkStatus);
+    const interval = setInterval(updateNetworkStatus, 3000);
+
+    return () => {
+      window.removeEventListener("online", updateNetworkStatus);
+      window.removeEventListener("offline", updateNetworkStatus);
+      clearInterval(interval);
+    };
+  }, []);
+
+  const getStatusConfig = () => {
+    switch (networkStrength) {
+      case "disconnected":
+        return { activeBars: 0, color: "bg-gray-400", label: "Disconnected" };
+      case "weak":
+        return { activeBars: 1, color: "bg-red-500", label: "Weak" };
+      case "medium":
+        return { activeBars: 2, color: "bg-yellow-500", label: "Medium" };
+      case "strong":
+        return { activeBars: 3, color: "bg-green-500", label: "Strong" };
+      default:
+        return { activeBars: 0, color: "bg-gray-400", label: "Unknown" };
+    }
+  };
+
+  const { activeBars, color, label } = getStatusConfig();
+
+  return (
+    <div className="flex items-center space-x-3 p-2 rounded-lg shadow-md bg-white dark:bg-gray-800">
+      {/* Signal Bars */}
+      <div className="flex items-end space-x-1">
+        {[1, 2, 3].map((bar) => (
+          <span
+            key={bar}
+            className={`w-1 md:w-1.5 transition-all duration-300 ease-in-out ${
+              activeBars >= bar ? color : "bg-gray-300 dark:bg-gray-600"
+            } rounded-sm`}
+            style={{ height: `${bar * 6}px` }}
+          />
+        ))}
+      </div>
+
+      {/* Status Text */}
+      <span className={`text-xs md:text-sm font-medium ${color.replace("bg-", "text-")}`}>
+        {label}
+      </span>
+    </div>
+  );
 }
