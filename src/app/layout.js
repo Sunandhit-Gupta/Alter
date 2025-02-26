@@ -3,16 +3,16 @@ import { SessionProvider, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import Navbar from "./components/navbar";
-import './globals.css';
+import "./globals.css";
 
 function AuthGuard({ children }) {
     const { data: session, status } = useSession();
     const router = useRouter();
 
-    // Redirect to login if unauthenticated
     useEffect(() => {
+        console.log("Session status:", status); // Debugging
         if (status === "unauthenticated") {
-            router.push("/auth/login");
+            router.replace("/auth/login"); // Prevents back button loop
         }
     }, [status, router]);
 
@@ -28,12 +28,13 @@ function AuthGuard({ children }) {
 
 export default function RootLayout({ children }) {
     return (
-        <html>
-            <body>
-                <SessionProvider>
+        <SessionProvider>
+            <html>
+                <body>
                     <AuthGuard>{children}</AuthGuard>
-                </SessionProvider>
-            </body>
-        </html>
+                    
+                </body>
+            </html>
+        </SessionProvider>
     );
 }
