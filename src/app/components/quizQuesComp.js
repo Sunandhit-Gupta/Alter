@@ -1,4 +1,5 @@
 "use client";
+import AiQuestionDrawer from "@/app/components/AiQuestionDrawer";
 import QuestionForm from "@/app/components/QuestionForm";
 import QuestionList from "@/app/components/QuestionList";
 import QuestionPopup from "@/app/components/QuestionPopup";
@@ -12,6 +13,7 @@ export default function QuizQuesComp({ quizId }) {
     const [showPopup, setShowPopup] = useState(false);
     const [newQuestion, setNewQuestion] = useState(null);
     const [showSettings, setShowSettings] = useState(false);
+    const [showDrawer, setShowDrawer] = useState(false);
     const router = useRouter();
 
     useEffect(() => {
@@ -86,26 +88,39 @@ export default function QuizQuesComp({ quizId }) {
         }
     };
 
+    const handleAddAiQuestion = (question) => {
+        setQuestions([...questions, question]);
+        setShowDrawer(false);
+    };
+
     if (showSettings) {
         return <QuizSettingsComp onSubmit={handleSubmitSettings} quizId={quizId} />;
     }
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg">
+        <div className="max-w-3xl mx-auto p-6 bg-white shadow-md rounded-lg relative">
             <h2 className="text-2xl font-bold mb-4 text-center">Quiz Questions</h2>
             <QuestionList questions={questions} />
             <QuestionPopup showPopup={showPopup} setShowPopup={setShowPopup} handleAddQuestion={handleAddQuestion} />
             <QuestionForm newQuestion={newQuestion} setNewQuestion={setNewQuestion} handleSaveQuestion={handleSaveQuestion} />
-            <div className="mt-6">
+
+            <div className="mt-6 flex gap-4">
                 <button className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600" onClick={() => setShowPopup(true)}>
                     ➕ Add Another Question
                 </button>
-                {questions.length > 0 && (
-                    <button className="mt-4 w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600" onClick={handleSubmitQuestions}>
-                        🚀 Submit All Questions
-                    </button>
-                )}
+
+                <button className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600" onClick={() => setShowDrawer(true)}>
+                    🤖 AI Generate Question
+                </button>
             </div>
+
+            {questions.length > 0 && (
+                <button className="mt-4 w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600" onClick={handleSubmitQuestions}>
+                    🚀 Submit All Questions
+                </button>
+            )}
+
+            {showDrawer && <AiQuestionDrawer onAddQuestion={handleAddAiQuestion} onClose={() => setShowDrawer(false)} />}
         </div>
     );
 }

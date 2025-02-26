@@ -76,6 +76,7 @@ export async function POST(req) {
             })),
             correctAnswers: structuredQuestion.correctAnswers,
         };
+        
         return NextResponse.json({ success: true, data: parsedQuestion });
     } catch (error) {
         console.error("❌ Error generating question:", error);
