@@ -16,6 +16,53 @@ export default function TakeTestPage() {
     const [error, setError] = useState("");
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [tabSwitchCount, setTabSwitchCount] = useState(0);
+    const [hasSwitchedTab, setHasSwitchedTab] = useState(false);
+
+    // 🔴 Restrict Tab Switching
+    useEffect(() => {
+        const handleVisibilityChange = () => {
+            if (!isSubmitted && document.hidden) {
+                setHasSwitchedTab(true);
+                setTabSwitchCount((prev) => prev + 1);
+            }
+        };
+
+        const handleFocus = () => {
+            if (hasSwitchedTab) {
+                alert("⚠️ Warning: Do not switch tabs! Your quiz may be auto-submitted.");
+                setHasSwitchedTab(false);
+            }
+        };
+
+        // ❌ Prevent Closing or Reloading
+        const handleBeforeUnload = (event) => {
+            event.preventDefault();
+            event.returnValue = "⚠️ Are you sure you want to leave? Your quiz will be submitted.";
+            return event.returnValue;
+        };
+
+        if (!isSubmitted) {
+            document.addEventListener("visibilitychange", handleVisibilityChange);
+            window.addEventListener("focus", handleFocus);
+            window.addEventListener("beforeunload", handleBeforeUnload);
+        }
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("focus", handleFocus);
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+        };
+    }, [isSubmitted, hasSwitchedTab]);
+
+
+    // 🚨 Auto-submit if tab is switched too many times
+    useEffect(() => {
+        if (!isSubmitted && tabSwitchCount >= 3) {
+            alert("❌ You switched tabs too many times! Your quiz is being auto-submitted.");
+            handleSubmitQuiz();
+        }
+    }, [tabSwitchCount, isSubmitted]);
 
     // 🔍 Check if Quiz is Already Submitted
     useEffect(() => {
@@ -87,11 +134,11 @@ export default function TakeTestPage() {
 
     // 🚀 Submit Quiz
     const handleSubmitQuiz = async () => {
-        const unanswered = questions.filter((q) => !responses[q._id]?.length);
-        if (unanswered.length) {
-            alert(`Please answer all questions before submitting.`);
-            return;
-        }
+        // const unanswered = questions.filter((q) => !responses[q._id]?.length);
+        // if (unanswered.length) {
+        //     alert(`Please answer all questions before submitting.`);
+        //     return;
+        // }
 
         try {
             const res = await axios.post("/api/quiz/submitted", {

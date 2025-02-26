@@ -3,7 +3,8 @@ import { signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation"; // Import usePathname
 import { useState } from "react";
-import { FaUser, FaBars, FaSun, FaMoon, FaSignOutAlt } from "react-icons/fa";
+import { FaBars, FaMoon, FaSignOutAlt, FaSun, FaUser } from "react-icons/fa";
+import NetworkStatus from "./NetworkStatus";
 
 export default function Navbar() {
   const { data: session, status } = useSession();
@@ -65,6 +66,10 @@ export default function Navbar() {
 
         {/* Right-side controls */}
         <div className="flex items-center space-x-4">
+
+          {/* Network Status Indicator */}
+          <NetworkStatus />
+
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
