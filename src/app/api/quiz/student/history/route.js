@@ -18,6 +18,7 @@ export async function GET(req) {
 
         // 🔍 Find user by email
         const user = await User.findOne({ email: studentEmail });
+        // console.log("user id : ",user._id)
         if (!user) {
             return NextResponse.json({ message: "User not found." }, { status: 404 });
         }
@@ -27,6 +28,8 @@ export async function GET(req) {
 
         const attemptedQuizzes = history.map((entry) => ({
             _id: entry._id,
+            id:user._id,
+            quizId: entry.quizId?._id || null,
             quizTitle: entry.quizId?.quizTitle || "Unknown Quiz",
             rollNumber: entry.rollNumber,
             totalAutoScore: entry.totalAutoScore || 0,
@@ -42,7 +45,9 @@ export async function GET(req) {
         const missedQuizzes = allQuizzes
             .filter((quiz) => !attemptedQuizIds.includes(quiz._id.toString()))
             .map((quiz) => ({
-                _id: quiz._id,
+                _id: null,
+                id:user._id,
+                quizId: quiz._id,
                 quizTitle: quiz.quizTitle,
                 rollNumber: user.rollNumber,
                 totalAutoScore: 0,

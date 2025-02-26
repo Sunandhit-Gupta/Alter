@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -70,6 +70,13 @@ export default function History() {
                             <p className={`mt-2 font-bold ${entry.status === 'Missed' ? 'text-red-500' : 'text-green-500'}`}>
                                 🚩 Status: {entry.status}
                             </p>
+                            <Link
+                            // /pages/quiz/attempts/${quiz._id}
+                                href={`/pages/quiz/student/${entry.quizId}/${entry.id}`} // Assuming studentId is available
+                                className="px-4 py-2 bg-[#4A90E2] text-white rounded hover:bg-[#357ABD] inline-block"
+                            >
+                                View Details
+                            </Link>
                         </li>
                     ))}
                 </ul>
@@ -79,3 +86,4 @@ export default function History() {
         </div>
     );
 }
+// /pages/quiz/student/${quizId}/${student.studentId}
