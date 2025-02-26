@@ -28,7 +28,26 @@ export default function History() {
         fetchHistory();
     }, [session]);
 
-    if (loading) return <p>Loading history...</p>;
+    // Skeleton Loader Component matching the original UI
+    const SkeletonLoader = () => (
+        <div className="p-6 animate-pulse">
+            <div className="h-8 w-48 bg-gray-300 rounded mb-4"></div>
+            <ul className="space-y-4">
+                {[...Array(3)].map((_, index) => (
+                    <li key={index} className="p-4 bg-gray-100 rounded-lg shadow">
+                        <div className="h-6 w-64 bg-gray-300 rounded mb-2"></div>
+                        <div className="h-4 w-40 bg-gray-300 rounded mb-1"></div>
+                        <div className="h-4 w-36 bg-gray-300 rounded mb-1"></div>
+                        <div className="h-4 w-36 bg-gray-300 rounded mb-1"></div>
+                        <div className="h-4 w-52 bg-gray-300 rounded mb-1"></div>
+                        <div className="h-4 w-32 bg-gray-300 rounded mt-2"></div>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+
+    if (loading) return <SkeletonLoader />;
     if (error) return <p className="text-red-500">{error}</p>;
 
     return (
