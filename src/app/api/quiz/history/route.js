@@ -35,9 +35,12 @@ export async function GET(req) {
 
                 // 🏆 Calculate average final score only for those who attempted
                 let avgFinalScore = "N/A";
+                let avgAutoFinalScore = "N/A";
                 if (attemptedStudents.length > 0) {
                     const totalScore = attemptedStudents.reduce((sum, entry) => sum + entry.totalFinalScore, 0);
+                    const totalAutoScore = attemptedStudents.reduce((sum, entry) => sum + entry.totalAutoScore, 0);
                     avgFinalScore = (totalScore / attemptedStudents.length).toFixed(2);
+                    avgAutoFinalScore = totalAutoScore;
                 }
 
                 return {
@@ -47,6 +50,7 @@ export async function GET(req) {
                     rollRange: quiz.rollRange,
                     studentCount: attemptedStudents.length, // Only count students who attempted
                     avgFinalScore,
+                    avgAutoFinalScore,
                     createdAt: quiz.createdAt,
                     status: "Completed"
                 };

@@ -1,9 +1,9 @@
 "use client";
 import axios from "axios";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import Link from "next/link"; // Import Link for navigation
-import { FaUserGraduate, FaIdBadge, FaEnvelope, FaTrophy, FaClock } from "react-icons/fa";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { FaClock, FaEnvelope, FaIdBadge, FaTrophy, FaUserGraduate } from "react-icons/fa";
 
 export default function TeacherQuizDetails() {
     const { quizId } = useParams();
@@ -76,6 +76,11 @@ export default function TeacherQuizDetails() {
                                 <FaEnvelope className="text-gray-500" />
                                 <span className="font-semibold text-gray-800">Email:</span>{" "}
                                 <span className="text-gray-600">{student.email}</span>
+                            </p>
+                            <p className="text-gray-700 flex items-center gap-2 mb-2">
+                                <FaTrophy className="text-yellow-500" />
+                                <span className="font-semibold text-gray-800">Auto Score:</span>{" "}
+                                <span className="text-green-600 font-medium">{student.totalAutoScore}</span>
                             </p>
                             <p className="text-gray-700 flex items-center gap-2 mb-2">
                                 <FaTrophy className="text-yellow-500" />

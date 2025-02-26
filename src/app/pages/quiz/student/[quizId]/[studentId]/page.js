@@ -1,7 +1,7 @@
 "use client";
 import axios from "axios";
-import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { FaCheckCircle, FaTimesCircle } from "react-icons/fa";
 
 export default function StudentQuizResponse() {
@@ -97,6 +97,10 @@ export default function StudentQuizResponse() {
                                 <span className="text-green-600">{question?.correctAnswers.join(", ")}</span>
                             </p>
                             <p className="text-gray-700">
+                                <span className="font-semibold text-gray-800">Auto Score:</span>{" "}
+                                <span className="text-green-600">{resp.autoScore}/{question?.points}</span>
+                            </p>
+                            <p className="text-gray-700">
                                 <span className="font-semibold text-gray-800">Score:</span>{" "}
                                 <span className="text-green-600">{resp.finalScore}/{question?.points}</span>
                             </p>
@@ -105,6 +109,9 @@ export default function StudentQuizResponse() {
                 })}
             </div>
             <div className="mt-6 p-4 bg-gray-100 rounded-lg">
+            <p className="text-gray-800 font-semibold">
+                    Total Auto Score: <span className="text-green-600">{response?.totalAutoScore}</span>
+                </p>
                 <p className="text-gray-800 font-semibold">
                     Total Score: <span className="text-green-600">{response?.totalFinalScore}</span>
                 </p>

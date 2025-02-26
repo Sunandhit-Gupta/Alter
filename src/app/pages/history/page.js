@@ -2,8 +2,8 @@
 
 import axios from "axios";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation"; // 🚀 Import router for navigation
+import { useEffect, useState } from "react";
 
 export default function TeacherQuizHistory() {
     const { data: session } = useSession();
@@ -64,6 +64,7 @@ export default function TeacherQuizHistory() {
                             <p className="text-gray-700">📖 Course Code: <strong>{quiz.courseCode}</strong></p>
                             <p className="text-gray-700">🎓 Batch: <strong>{quiz.batch}</strong></p>
                             <p className="text-gray-700">👨‍🎓 Students Attempted: <strong>{quiz.studentCount}</strong></p>
+                            <p className="text-gray-700">🏆 Avg. Auto Final Score: <strong>{quiz.avgAutoFinalScore}</strong></p>
                             <p className="text-gray-700">🏆 Avg. Final Score: <strong>{quiz.avgFinalScore}</strong></p>
                             <p className="text-gray-700">📅 Created At: <strong>{new Date(quiz.createdAt).toLocaleString()}</strong></p>
 
