@@ -8,7 +8,7 @@ export default function AddTimeline({ quizId, activeStep, setActiveStep }) {
     };
 
     return (
-        <div className="flex justify-center space-x-4">
+        <div className="flex justify-center space-x-4 p-6">
             <button
                 className={`p-2 rounded-full ${activeStep === 'details' ? 'bg-blue-400' : 'bg-gray-300'}`}
                 onClick={() => setActiveStep('details')}
