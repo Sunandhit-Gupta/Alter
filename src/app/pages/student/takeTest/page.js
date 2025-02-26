@@ -17,25 +17,30 @@ export default function TakeTestPage() {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [loading, setLoading] = useState(true);
     const [tabSwitchCount, setTabSwitchCount] = useState(0);
-    const [hasSwitchedTab, setHasSwitchedTab] = useState(false);
 
-    // 🔴 Restrict Tab Switching
+    // Prevent Text Selection and Copy-Paste
+    useEffect(() => {
+        document.addEventListener("copy", (e) => e.preventDefault());
+        document.addEventListener("paste", (e) => e.preventDefault());
+        document.addEventListener("contextmenu", (e) => e.preventDefault());
+        document.body.style.userSelect = "none";
+        return () => {
+            document.removeEventListener("copy", (e) => e.preventDefault());
+            document.removeEventListener("paste", (e) => e.preventDefault());
+            document.removeEventListener("contextmenu", (e) => e.preventDefault());
+            document.body.style.userSelect = "auto";
+        };
+    }, []);
+
+    // Prevent Tab Switching and Alert on Change
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (!isSubmitted && document.hidden) {
-                setHasSwitchedTab(true);
+                alert("⚠️ Warning: You switched tabs! Avoid switching tabs to prevent auto-submission.");
                 setTabSwitchCount((prev) => prev + 1);
             }
         };
 
-        const handleFocus = () => {
-            if (hasSwitchedTab) {
-                alert("⚠️ Warning: Do not switch tabs! Your quiz may be auto-submitted.");
-                setHasSwitchedTab(false);
-            }
-        };
-
-        // ❌ Prevent Closing or Reloading
         const handleBeforeUnload = (event) => {
             event.preventDefault();
             event.returnValue = "⚠️ Are you sure you want to leave? Your quiz will be submitted.";
@@ -44,19 +49,16 @@ export default function TakeTestPage() {
 
         if (!isSubmitted) {
             document.addEventListener("visibilitychange", handleVisibilityChange);
-            window.addEventListener("focus", handleFocus);
             window.addEventListener("beforeunload", handleBeforeUnload);
         }
 
         return () => {
             document.removeEventListener("visibilitychange", handleVisibilityChange);
-            window.removeEventListener("focus", handleFocus);
             window.removeEventListener("beforeunload", handleBeforeUnload);
         };
-    }, [isSubmitted, hasSwitchedTab]);
+    }, [isSubmitted]);
 
-
-    // 🚨 Auto-submit if tab is switched too many times
+    // Auto-submit on excessive tab switching
     useEffect(() => {
         if (!isSubmitted && tabSwitchCount >= 3) {
             alert("❌ You switched tabs too many times! Your quiz is being auto-submitted.");
@@ -64,35 +66,14 @@ export default function TakeTestPage() {
         }
     }, [tabSwitchCount, isSubmitted]);
 
-    // 🔍 Check if Quiz is Already Submitted
-    useEffect(() => {
-        const checkSubmission = async () => {
-            try {
-                const res = await axios.get(`/api/user/submittedQuizzes?email=${session?.user?.email}`);
-                const submittedQuizIds = res.data?.submittedQuizzes || [];
-
-                if (submittedQuizIds.includes(quizId)) {
-                    setIsSubmitted(true);
-                }
-            } catch (err) {
-                console.error("Failed to check submission:", err);
-            }
-        };
-
-        if (quizId && session?.user?.email) checkSubmission();
-    }, [quizId, session]);
-
-    // 📝 Fetch Quiz Questions
+    // Fetch Quiz Questions
     useEffect(() => {
         const fetchQuestions = async () => {
             if (isSubmitted) return;
-
             try {
                 const res = await axios.get(`/api/quiz/${quizId}/questions`);
                 if (res.data.success) {
                     setQuestions(res.data.questions);
-
-                    // ✅ Initialize responses properly
                     const initialResponses = {};
                     res.data.questions.forEach((q) => {
                         initialResponses[q._id] = [];
@@ -102,51 +83,39 @@ export default function TakeTestPage() {
                     setError(res.data.message);
                 }
             } catch (err) {
-                console.error("Failed to fetch questions:", err);
                 setError("Failed to load quiz questions.");
             } finally {
                 setLoading(false);
             }
         };
-
         if (quizId) fetchQuestions();
     }, [quizId, isSubmitted]);
 
-    // 🟢 Handle Answer Change
+    // Handle Answer Change
     const handleAnswerChange = (questionId, answer, type) => {
         setResponses((prev) => {
             const current = prev[questionId] || [];
-
             if (type === "Single Correct MCQ") {
                 return { ...prev, [questionId]: [answer] };
             }
-
             if (type === "Multiple Correct MCQ") {
                 const updatedAnswers = current.includes(answer)
                     ? current.filter((a) => a !== answer)
                     : [...current, answer];
                 return { ...prev, [questionId]: updatedAnswers };
             }
-
             return { ...prev, [questionId]: [answer] };
         });
     };
 
-    // 🚀 Submit Quiz
+    // Submit Quiz
     const handleSubmitQuiz = async () => {
-        // const unanswered = questions.filter((q) => !responses[q._id]?.length);
-        // if (unanswered.length) {
-        //     alert(`Please answer all questions before submitting.`);
-        //     return;
-        // }
-
         try {
             const res = await axios.post("/api/quiz/submitted", {
                 quizId,
                 responses,
                 studentEmail: session?.user?.email,
             });
-
             if (res.data.success) {
                 alert("✅ Quiz submitted successfully!");
                 router.push("/pages/student/history");
@@ -154,7 +123,6 @@ export default function TakeTestPage() {
                 alert(res.data.message || "❌ Failed to submit quiz.");
             }
         } catch (err) {
-            console.error("Failed to submit quiz:", err);
             alert("⚠️ Error submitting the quiz.");
         }
     };
@@ -165,60 +133,31 @@ export default function TakeTestPage() {
     if (!questions.length) return <p>❌ No questions found for this quiz.</p>;
 
     return (
-        <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">📝 Take Test</h1>
-
-            {questions.map((question) => (
-                <div key={question._id} className="mb-6">
-                    <p className="font-medium">{question.text}</p>
-
-                    {/* ✅ Single Correct MCQ */}
-                    {question.type === "Single Correct MCQ" &&
-                        question.options.map((option) => (
-                            <label key={option} className="block">
-                                <input
-                                    type="radio"
-                                    name={`question-${question._id}`}
-                                    value={option}
-                                    checked={responses[question._id]?.includes(option) || false}
-                                    onChange={() => handleAnswerChange(question._id, option, question.type)}
-                                />
-                                {option}
-                            </label>
-                        ))}
-
-                    {/* ✅ Multiple Correct MCQ */}
-                    {question.type === "Multiple Correct MCQ" &&
-                        question.options.map((option) => (
-                            <label key={option} className="block">
-                                <input
-                                    type="checkbox"
-                                    value={option}
-                                    checked={responses[question._id]?.includes(option) || false}
-                                    onChange={() => handleAnswerChange(question._id, option, question.type)}
-                                />
-                                {option}
-                            </label>
-                        ))}
-
-                    {/* ✅ Subjective Answer */}
-                    {question.type === "Subjective" && (
-                        <textarea
-                            className="w-full p-2 border rounded"
-                            placeholder="Type your answer here..."
-                            value={responses[question._id]?.[0] || ""}
-                            onChange={(e) => handleAnswerChange(question._id, e.target.value, question.type)}
-                        />
-                    )}
-                </div>
-            ))}
-
-            <button
-                onClick={handleSubmitQuiz}
-                className="bg-green-500 text-white p-2 rounded hover:bg-green-600"
-            >
-                📤 Submit Quiz
-            </button>
+        <div className="p-6 bg-gray-100 min-h-screen">
+            <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">📝 Take Test</h1>
+            <div className="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-lg">
+                {questions.map((question) => (
+                    <div key={question._id} className="mb-6">
+                        <p className="font-semibold text-lg mb-3 text-gray-800">{question.text}</p>
+                        {question.type === "Subjective" ? (
+                            <textarea
+                                className="w-full p-3 border rounded-lg"
+                                placeholder="Type your answer here..."
+                                value={responses[question._id]?.[0] || ""}
+                                onChange={(e) => handleAnswerChange(question._id, e.target.value, question.type)}
+                            />
+                        ) : (
+                            question.options.map((option) => (
+                                <label key={option} className="block p-3 border rounded-lg cursor-pointer hover:bg-gray-200 flex items-center gap-2">
+                                    <input type={question.type === "Single Correct MCQ" ? "radio" : "checkbox"} name={`q-${question._id}`} value={option} onChange={() => handleAnswerChange(question._id, option, question.type)} />
+                                    <span className="text-gray-700">{option}</span>
+                                </label>
+                            ))
+                        )}
+                    </div>
+                ))}
+                <button onClick={handleSubmitQuiz} className="w-full mt-4 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">📤 Submit Quiz</button>
+            </div>
         </div>
     );
 }

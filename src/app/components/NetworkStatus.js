@@ -25,8 +25,6 @@ export default function NetworkStatus() {
         let downlink = navigator.connection.downlink;
         let effectiveType = navigator.connection.effectiveType;
 
-        console.log("downlink", downlink);
-        console.log("effectiveType", effectiveType);
         if (downlink && effectiveType) {
           if (downlink < 1 || effectiveType === "slow-2g" || effectiveType === "2g") {
             setNetworkStrength("weak");
@@ -87,8 +85,8 @@ export default function NetworkStatus() {
         ))}
       </div>
 
-      {/* Status Text */}
-      <span className={`text-xs md:text-sm font-medium ${color.replace("bg-", "text-")}`}>
+      {/* Status Text (Hidden on Mobile) */}
+      <span className={`text-xs md:text-sm font-medium ${color.replace("bg-", "text-")} hidden md:block`}>
         {label}
       </span>
     </div>
