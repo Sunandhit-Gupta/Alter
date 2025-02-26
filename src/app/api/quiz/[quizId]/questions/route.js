@@ -1,25 +1,26 @@
 import Quiz from '@/app/models/quiz';
-import Question from '@/app/models/question';
 import { connectToDatabase } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 
-
-export async function GET(req, { params }) {
-
+export async function GET(req, context) {
     try {
-        const { quizId } = params;
+        // Await params to ensure they are available
+        const { params } = await context;
 
-        if (!quizId) {
+        if (!params?.quizId) {
+            console.error("🚨 Missing params:", context);
             return NextResponse.json({ success: false, message: 'Quiz ID is required.' }, { status: 400 });
         }
 
+        const { quizId } = params;
         await connectToDatabase();
 
         const quiz = await Quiz.findById(quizId).populate({
             path: 'questions',
             model: 'Question'
         });
-                if (!quiz) {
+
+        if (!quiz) {
             return NextResponse.json({ success: false, message: 'Quiz not found.' }, { status: 404 });
         }
 

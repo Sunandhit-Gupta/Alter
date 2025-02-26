@@ -1,6 +1,6 @@
+import QuizSettingsComp from '@/app/components/quizSettingsComp';
 import axios from "axios";
 import { useEffect, useState } from "react";
-import QuizSettingsComp from '@/app/components/quizSettingsComp';
 
 export default function QuizQuesComp({ quizId }) {
     const [questions, setQuestions] = useState([]);
