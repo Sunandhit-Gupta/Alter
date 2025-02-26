@@ -1,15 +1,12 @@
 "use client";
-
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { useRouter } from "next/navigation";
-// Import icons from react-icons
+import Link from "next/link"; // Import Link for navigation
 import { FaUserGraduate, FaIdBadge, FaEnvelope, FaTrophy, FaClock } from "react-icons/fa";
 
 export default function TeacherQuizDetails() {
-    const router = useRouter();
-    const { quizId } = useParams(); // Get quiz ID from URL
+    const { quizId } = useParams();
     const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -26,11 +23,9 @@ export default function TeacherQuizDetails() {
                 setLoading(false);
             }
         };
-
         fetchStudentAttempts();
     }, [quizId]);
 
-    // Skeleton Loader Component with card-based layout
     const SkeletonLoader = () => (
         <div className="p-6 animate-pulse">
             <div className="h-8 w-64 bg-gray-200 rounded mb-4"></div>
@@ -48,14 +43,13 @@ export default function TeacherQuizDetails() {
             </div>
         </div>
     );
-    // text-[#4A90E2]
-    // text-[#FF6F61]
+
     return (
         <div className="p-6">
             <h1 className="text-3xl font-extrabold mb-4 text-[#4A90E2] tracking-tight">
                 Quiz Attempt Details
             </h1>
-            <p className="text-gray-700 mb-6 text-lg ">
+            <p className="text-gray-700 mb-6 text-lg">
                 A detailed list of students who have taken this quiz.
             </p>
 
@@ -71,7 +65,7 @@ export default function TeacherQuizDetails() {
                             className="p-5 bg-white border border-gray-200 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
                         >
                             <h3 className="text-xl font-bold text-[#FF6F61] flex items-center gap-2 mb-3">
-                                 <FaUserGraduate/>{student.name}
+                                <FaUserGraduate /> {student.name}
                             </h3>
                             <p className="text-gray-700 flex items-center gap-2 mb-2">
                                 <FaIdBadge className="text-gray-500" />
@@ -88,13 +82,21 @@ export default function TeacherQuizDetails() {
                                 <span className="font-semibold text-gray-800">Score:</span>{" "}
                                 <span className="text-green-600 font-medium">{student.totalScore}</span>
                             </p>
-                            <p className="text-gray-700 flex items-center gap-2">
+                            <p className="text-gray-700 flex items-center gap-2 mb-4">
                                 <FaClock className="text-gray-500" />
                                 <span className="font-semibold text-gray-800">Attempt Time:</span>{" "}
                                 <span className="text-gray-600">
                                     {new Date(student.attemptTime).toLocaleString()}
                                 </span>
                             </p>
+                            {/* Link to new page */}
+                            <Link
+                            // /pages/quiz/attempts/${quiz._id}
+                                href={`/pages/quiz/student/${quizId}/${student.studentId}`} // Assuming studentId is available
+                                className="px-4 py-2 bg-[#4A90E2] text-white rounded hover:bg-[#357ABD] inline-block"
+                            >
+                                View Details
+                            </Link>
                         </div>
                     ))}
                 </div>

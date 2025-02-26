@@ -69,7 +69,7 @@ export default function TeacherQuizHistory() {
 
                             {/* 🚀 View Details Button */}
                             <button
-                                onClick={() => router.push(`/pages/quiz/details/${quiz._id}`)}
+                                onClick={() => router.push(`/pages/quiz/attempts/${quiz._id}`)}
                                 className="mt-3 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-700"
                             >
                                 View Details

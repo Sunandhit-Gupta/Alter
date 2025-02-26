@@ -27,7 +27,8 @@ export async function GET(req) {
                     rollNumber: student?.rollNumber || "N/A",
                     email: student?.email || "N/A",
                     totalScore: response.totalFinalScore,
-                    attemptTime: response.createdAt
+                    attemptTime: response.createdAt,
+                    studentId : response.studentId
                 };
             })
         );
