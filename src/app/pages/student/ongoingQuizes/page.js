@@ -42,14 +42,15 @@ export default function OngoingQuizzes() {
         router.push(`/pages/student/takeTest?quizId=${quizId}`);
     };
 
-    if (loading) return <p>Loading ongoing quizzes...</p>;
-    if (error) return <p className="text-red-500">{error}</p>;
-
     return (
         <div className="p-6">
             <h1 className="text-2xl font-bold mb-4">Ongoing Quizzes</h1>
 
-            {quizzes.length > 0 ? (
+            {loading ? (
+                <SkeletonLoader />
+            ) : error ? (
+                <p className="text-red-500">{error}</p>
+            ) : quizzes.length > 0 ? (
                 <ul className="space-y-4">
                     {quizzes.map((quiz) => (
                         <li key={quiz._id} className="p-4 bg-gray-100 rounded-lg shadow">
@@ -74,3 +75,22 @@ export default function OngoingQuizzes() {
         </div>
     );
 }
+
+// Skeleton Loader Component
+const SkeletonLoader = () => {
+    return (
+        <ul className="space-y-4">
+            {[...Array(3)].map((_, index) => (
+                <li key={index} className="p-4 bg-gray-200 animate-pulse rounded-lg shadow-md">
+                    <div className="h-6 bg-gray-300 rounded w-3/4 mb-3"></div> {/* Quiz Title */}
+                    <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div> {/* Description */}
+                    <div className="h-4 bg-gray-300 rounded w-1/3 mb-2"></div> {/* Course Code */}
+                    <div className="h-4 bg-gray-300 rounded w-full"></div> {/* Batch Info */}
+                    <div className="h-4 bg-gray-300 rounded w-2/3 mb-4"></div> {/* Start Time */}
+
+                    <div className="mt-4 h-10 bg-gray-400 rounded w-1/3"></div> {/* Button Placeholder */}
+                </li>
+            ))}
+        </ul>
+    );
+};

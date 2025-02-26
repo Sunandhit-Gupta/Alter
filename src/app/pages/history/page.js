@@ -1,107 +1,74 @@
 "use client";
-import axios from "axios";
-import { useState } from "react";
 
-export default function SubjectiveScoreCalculator() {
-    const [question, setQuestion] = useState("");
-    const [correctAnswer, setCorrectAnswer] = useState("");
-    const [studentAnswer, setStudentAnswer] = useState("");
-    const [totalMarks, setTotalMarks] = useState(10);
-    const [score, setScore] = useState(null);
-    const [loading, setLoading] = useState(false);
+import axios from "axios";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
+
+export default function TeacherQuizHistory() {
+    const { data: session } = useSession();
+    const [quizzes, setQuizzes] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError("");
-        setScore(null);
+    useEffect(() => {
+        const fetchTeacherHistory = async () => {
+            if (!session?.user?.email) return;
 
-        try {
-            const response = await axios.post("/api/subjectiveScore", {
-                question,
-                correctAnswer,
-                studentAnswer,
-                totalMarks: parseFloat(totalMarks)
-            });
+            try {
+                const res = await axios.get(`/api/quiz/history?email=${session.user.email}`);
+                setQuizzes(res.data);
+            } catch (err) {
+                console.error("❌ Failed to fetch teacher quiz history:", err);
+                setError("⚠️ Failed to load history.");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-            setScore(response.data.score);
-        } catch (err) {
-            setError(err.response?.data?.error || "Failed to evaluate answer.");
-        } finally {
-            setLoading(false);
-        }
-    };
+        fetchTeacherHistory();
+    }, [session]);
+
+    // Skeleton Loader Component for better UX
+    const SkeletonLoader = () => (
+        <div className="p-6 animate-pulse">
+            <div className="h-8 w-56 bg-gray-300 rounded mb-4"></div>
+            <ul className="space-y-4">
+                {[...Array(3)].map((_, index) => (
+                    <li key={index} className="p-4 bg-gray-100 rounded-lg shadow">
+                        <div className="h-6 w-64 bg-gray-300 rounded mb-2"></div>
+                        <div className="h-4 w-40 bg-gray-300 rounded mb-1"></div>
+                        <div className="h-4 w-36 bg-gray-300 rounded mb-1"></div>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+
+    if (loading) return <SkeletonLoader />;
+    if (error) return <p className="text-red-500">{error}</p>;
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
-            <h1 className="text-2xl font-bold mb-6 text-center">Subjective Score Calculator</h1>
+        <div className="p-6">
+            <h1 className="text-2xl font-bold mb-4">📊 Quiz Management History</h1>
+            <p className="text-gray-600 mb-6">
+                View all quizzes you have created and their completion details.
+            </p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-gray-700 font-medium">Question:</label>
-                    <textarea
-                        value={question}
-                        onChange={(e) => setQuestion(e.target.value)}
-                        className="w-full p-2 border rounded"
-                        rows="3"
-                        required
-                    ></textarea>
-                </div>
-
-                <div>
-                    <label className="block text-gray-700 font-medium">Correct Answer:</label>
-                    <textarea
-                        value={correctAnswer}
-                        onChange={(e) => setCorrectAnswer(e.target.value)}
-                        className="w-full p-2 border rounded"
-                        rows="3"
-                        required
-                    ></textarea>
-                </div>
-
-                <div>
-                    <label className="block text-gray-700 font-medium">Student's Answer:</label>
-                    <textarea
-                        value={studentAnswer}
-                        onChange={(e) => setStudentAnswer(e.target.value)}
-                        className="w-full p-2 border rounded"
-                        rows="3"
-                        required
-                    ></textarea>
-                </div>
-
-                <div>
-                    <label className="block text-gray-700 font-medium">Total Marks:</label>
-                    <input
-                        type="number"
-                        value={totalMarks}
-                        onChange={(e) => setTotalMarks(e.target.value)}
-                        className="w-full p-2 border rounded"
-                        min="1"
-                        required
-                    />
-                </div>
-
-                <button
-                    type="submit"
-                    className="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 transition"
-                    disabled={loading}
-                >
-                    {loading ? "Calculating..." : "Calculate Score"}
-                </button>
-            </form>
-
-            {error && (
-                <div className="mt-4 p-2 bg-red-100 text-red-700 rounded">
-                    ⚠️ {error}
-                </div>
-            )}
-
-            {score !== null && (
-                <div className="mt-4 p-2 bg-green-100 text-green-700 rounded">
-                    🎯 Student's Score: <strong>{score} / {totalMarks}</strong>
-                </div>
+            {quizzes.length > 0 ? (
+                <ul className="space-y-4">
+                    {quizzes.map((quiz) => (
+                        <li key={quiz._id} className="p-4 bg-gray-100 rounded-lg shadow">
+                            <h2 className="text-xl font-semibold">📝 {quiz.quizTitle}</h2>
+                            <p className="text-gray-700">📖 Course Code: <strong>{quiz.courseCode}</strong></p>
+                            <p className="text-gray-700">🎓 Batch: <strong>{quiz.batch}</strong></p>
+                            <p className="text-gray-700">👨‍🎓 Students Attempted: <strong>{quiz.studentCount}</strong></p>
+                            <p className="text-gray-700">🏆 Avg. Final Score: <strong>{quiz.avgFinalScore}</strong></p>
+                            <p className="text-gray-700">📅 Created At: <strong>{new Date(quiz.createdAt).toLocaleString()}</strong></p>
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p className="text-gray-500">No quizzes found in your history.</p>
             )}
         </div>
     );
