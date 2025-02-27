@@ -5,8 +5,6 @@ import { getServerSession } from 'next-auth';
 import { NextResponse } from 'next/server';
 
 // GET: Fetch Quiz Settings
-// GET: Fetch Quiz Settings
-// GET: Fetch Quiz Settings
 export async function GET(req) {
     try {
         await connectToDatabase();
@@ -28,12 +26,11 @@ export async function GET(req) {
             return NextResponse.json({ message: 'Quiz not found' }, { status: 404 });
         }
 
-        // Send dates in UTC, frontend will convert to local time
         const settings = {
             shuffleQuestions: quiz.shuffleQuestions ?? false,
             duration: quiz.duration ?? 30,
             startTime: quiz.startTime?.toISOString() ?? null,
-            endTime: quiz.endTime?.toISOString() ?? null
+            endTime: quiz.endTime?.toISOString() ?? null,
         };
 
         return NextResponse.json({ message: 'Quiz settings fetched successfully', settings });
@@ -43,9 +40,6 @@ export async function GET(req) {
     }
 }
 
-
-
-// PUT: Update Quiz Settings
 // PUT: Update Quiz Settings
 export async function PUT(req) {
     try {
@@ -63,9 +57,24 @@ export async function PUT(req) {
             return NextResponse.json({ message: 'Quiz ID is required' }, { status: 400 });
         }
 
-        // Convert frontend timezone (local) to UTC before storing
-        const startUTC = startTime ? new Date(startTime).toISOString() : null;
-        const endUTC = startUTC ? new Date(new Date(startUTC).getTime() + duration * 60 * 1000).toISOString() : null;
+        if (!startTime) {
+            return NextResponse.json({ message: 'Start time is required' }, { status: 400 });
+        }
+
+        if (duration <= 0) {
+            return NextResponse.json({ message: 'Duration must be greater than 0' }, { status: 400 });
+        }
+
+        // Convert startTime from local time string to UTC
+        const startLocal = new Date(startTime);
+        if (isNaN(startLocal.getTime())) {
+            return NextResponse.json({ message: 'Invalid start time' }, { status: 400 });
+        }
+        const startUTCString = startLocal.toISOString();
+
+        // Calculate endTime in UTC based on startTime and duration
+        const endUTC = new Date(startLocal.getTime() + duration * 60 * 1000);
+        const endUTCString = endUTC.toISOString();
 
         const updatedQuiz = await Quiz.findByIdAndUpdate(
             quizId,
@@ -73,9 +82,9 @@ export async function PUT(req) {
                 $set: {
                     shuffleQuestions,
                     duration,
-                    startTime: startUTC,
-                    endTime: endUTC
-                }
+                    startTime: startUTCString,
+                    endTime: endUTCString,
+                },
             },
             { new: true }
         );
@@ -90,4 +99,3 @@ export async function PUT(req) {
         return NextResponse.json({ message: 'Failed to update quiz settings' }, { status: 500 });
     }
 }
-
