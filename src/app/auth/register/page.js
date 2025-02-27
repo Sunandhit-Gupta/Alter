@@ -113,7 +113,7 @@ export default function RegisterPage() {
 
           <button
             type="submit"
-            className="w-full py-2 text-white bg-blue-500 rounded-md hover:bg-green-700 transition-all duration-300"
+            className="w-full py-2 text-white bg-blue-500 rounded-md hover:bg-blue-700 transition-all duration-300"
           >
             Register
           </button>
