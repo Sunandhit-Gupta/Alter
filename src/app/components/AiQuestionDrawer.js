@@ -1,6 +1,7 @@
 "use client";
 import axios from "axios";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
     const [prompt, setPrompt] = useState("");
@@ -9,7 +10,7 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
 
     const fetchAiQuestions = async () => {
         if (!prompt.trim()) {
-            alert("Please enter a prompt!");
+            toast.warning("Please enter a prompt!");
             return;
         }
 
@@ -37,11 +38,11 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
 
                 setAiQuestions(parsedQuestions); // Store multiple questions properly
             } else {
-                alert("⚠️ Invalid response from AI.");
+                toast.error("Invalid response from AI.");
             }
         } catch (error) {
             console.error("Error fetching AI questions:", error);
-            alert("⚠️ Failed to generate questions. Try again.");
+            toast.error("Failed to generate questions. Try again.");
         }
         setLoading(false);
     };

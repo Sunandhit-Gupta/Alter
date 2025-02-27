@@ -2,6 +2,7 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -27,10 +28,10 @@ export default function RegisterPage() {
         ...formData,
         courseCodes: formData.courseCodes.split(","),
       });
-      alert("Registration successful!");
+      toast.success("Registration successful!");
       router.push("/auth/login");
     } catch (error) {
-      alert("Registration failed!");
+      toast.error("Registration failed!");
       console.error(error);
     }
   };

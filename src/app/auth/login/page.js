@@ -3,6 +3,7 @@ import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function LoginPage() {
     const [email, setEmail] = useState("");
@@ -19,7 +20,7 @@ export default function LoginPage() {
         });
 
         if (result?.error) {
-            alert(result.error);
+            toast.error(result.error);
         }else{
             router.push("/");
         }

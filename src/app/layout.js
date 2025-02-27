@@ -2,8 +2,11 @@
 import { SessionProvider, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/navbar";
 import "./globals.css";
+
 
 function AuthGuard({ children }) {
     const { data: session, status } = useSession();
@@ -71,6 +74,7 @@ export default function RootLayout({ children }) {
         <SessionProvider>
             <html>
                 <body>
+                <ToastContainer position="top-right" autoClose={3000} />
                     <AuthGuard>{children}</AuthGuard>
                 </body>
             </html>

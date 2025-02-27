@@ -40,7 +40,7 @@ export default function QuizDetailForm({ setQuizId, onNext }) {
 
         try {
             if (!session?.user?.token) {
-                alert("Unauthorized: No token found.");
+                toast.error("Unauthorized: No token found.");
                 return;
             }
 
@@ -49,11 +49,11 @@ export default function QuizDetailForm({ setQuizId, onNext }) {
             });
 
             setQuizId(res.data.quizId);
-            alert("Quiz details saved successfully!");
+            toast.success("Quiz details saved successfully!");
             onNext();
         } catch (error) {
             console.error("Failed to save quiz:", error);
-            alert("Failed to save quiz details.");
+            toast.error("Failed to save quiz details.");
         }
     };
 

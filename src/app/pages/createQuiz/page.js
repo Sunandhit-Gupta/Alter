@@ -15,7 +15,7 @@ export default function CreateQuiz() {
     // Check if user is authenticated
     useEffect(() => {
         if (status === 'unauthenticated') {
-            alert('You must be signed in to create a quiz.');
+            toast.warning('You must be signed in to create a quiz.');
             window.location.href = '/auth/login'; // Redirect to sign-in page
         }
     }, [status]);

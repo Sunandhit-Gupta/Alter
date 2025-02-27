@@ -51,13 +51,13 @@ const handleDeleteQuestion = async (questionIdentifier) => {
             });
 
             if (response.data.success) {
-                alert("🗑️ Question deleted successfully!");
+                toast.success("🗑️ Question deleted successfully!");
             } else {
-                alert("❌ Failed to delete question.");
+                toast.error("Failed to delete question.");
             }
         } catch (error) {
             console.error("Error deleting question:", error);
-            alert("⚠️ An error occurred while deleting the question.");
+            toast.error(" An error occurred while deleting the question.");
         }
     }
 
@@ -68,11 +68,11 @@ const handleDeleteQuestion = async (questionIdentifier) => {
 
     const handleSaveQuestion = () => {
         if (!newQuestion.text.trim()) {
-            alert("⚠️ Question cannot be empty!");
+            toast.warning("Question cannot be empty!");
             return;
         }
         if (newQuestion.type !== "Subjective" && newQuestion.correctAnswers.length === 0) {
-            alert("⚠️ Please select at least one correct answer!");
+            toast.warning(" Please select at least one correct answer!");
             return;
         }
         setQuestions([...questions, newQuestion]);
@@ -81,7 +81,7 @@ const handleDeleteQuestion = async (questionIdentifier) => {
 
     const handleSubmitQuestions = async () => {
         if (!quizId) {
-            alert("Quiz ID not found. Please create the quiz first.");
+            toast.error("Quiz ID not found. Please create the quiz first.");
             return;
         }
 
@@ -89,7 +89,7 @@ const handleDeleteQuestion = async (questionIdentifier) => {
         const newQuestions = questions.filter(q => !q._id);
 
         if (newQuestions.length === 0) {
-            alert("✅ No new questions to submit!");
+            toast.warning("No new questions to submit!");
             setShowSettings(true);
             return;
         }
@@ -101,14 +101,14 @@ const handleDeleteQuestion = async (questionIdentifier) => {
             });
 
             if (response.data.success) {
-                alert("✅ Questions submitted successfully!");
+                toast.success("Questions submitted successfully!");
                 setShowSettings(true);
             } else {
-                alert("❌ Failed to submit questions.");
+                toast.error("Failed to submit questions.");
             }
         } catch (error) {
             console.error("Error submitting questions:", error);
-            alert("⚠️ An error occurred while submitting questions.");
+            toast.error("An error occurred while submitting questions.");
         }
     };
 
@@ -116,14 +116,14 @@ const handleDeleteQuestion = async (questionIdentifier) => {
         try {
             const response = await axios.put(`/api/quiz/${quizId}/update-settings`, settings);
             if (response.data.success) {
-                alert("✅ Quiz settings updated successfully!");
+                toast.success("Quiz settings updated successfully!");
                 router.replace("/pages/pendingQuiz");
             } else {
-                alert("❌ Failed to update settings.");
+                toast.error("Failed to update settings.");
             }
         } catch (error) {
             console.error("Error updating quiz settings:", error);
-            alert("⚠️ An error occurred while updating settings.");
+            toast.error("An error occurred while updating settings.");
         }
     };
 

@@ -28,11 +28,11 @@ export default function PendingQuiz() {
     const handlePublishQuiz = async (quizId) => {
         try {
             await axios.put("/api/quiz/publish", { quizId });
-            alert("Quiz published successfully!");
+            toast.success("Quiz published successfully!");
             fetchPendingQuizzes();
         } catch (error) {
             console.error("Failed to publish quiz:", error);
-            alert("Failed to publish quiz.");
+            toast.error("Failed to publish quiz.");
         }
     };
 
@@ -40,11 +40,11 @@ export default function PendingQuiz() {
     const handleStartQuiz = async (quizId) => {
         try {
             await axios.put("/api/quiz/start", { quizId });
-            alert("Quiz started successfully!");
+            toast.success("Quiz started successfully!");
             fetchPendingQuizzes();
         } catch (error) {
             console.error("Failed to start quiz:", error);
-            alert("Failed to start quiz.");
+            toast.error("Failed to start quiz.");
         }
     };
 
@@ -53,11 +53,11 @@ export default function PendingQuiz() {
         if (confirm("Are you sure you want to end this quiz?")) {
             try {
                 await axios.put("/api/quiz/end", { quizId });
-                alert("Quiz ended successfully!");
+                toast.success("Quiz ended successfully!");
                 fetchPendingQuizzes();
             } catch (error) {
                 console.error("Failed to end quiz:", error);
-                alert("Failed to end quiz.");
+                toast.error("Failed to end quiz.");
             }
         }
     };
@@ -79,12 +79,12 @@ export default function PendingQuiz() {
     const handleUpdateQuiz = async (quizId) => {
         try {
             await axios.put("/api/quiz/pending", { quizId, ...formData });
-            alert("Quiz updated successfully!");
+            toast.success("Quiz updated successfully!");
             setEditingQuiz(null);
             fetchPendingQuizzes();
         } catch (error) {
             console.error("Failed to update quiz:", error);
-            alert("Failed to update quiz.");
+            toast.error("Failed to update quiz.");
         }
     };
 
@@ -92,11 +92,11 @@ export default function PendingQuiz() {
         if (confirm("Are you sure you want to delete this quiz?")) {
             try {
                 await axios.delete("/api/quiz/pending", { data: { quizId } });
-                alert("Quiz deleted successfully!");
+                toast.success("Quiz deleted successfully!");
                 fetchPendingQuizzes();
             } catch (error) {
                 console.error("Failed to delete quiz:", error);
-                alert("Failed to delete quiz.");
+                toast.error("Failed to delete quiz.");
             }
         }
     };
@@ -104,12 +104,12 @@ export default function PendingQuiz() {
     const handleSettingsSubmit = async (quizId, settings) => {
         try {
             await axios.put("/api/quiz/settings", { quizId, settings });
-            alert("Quiz settings updated successfully!");
+            toast.success("Quiz settings updated successfully!");
             setSettingsQuizId(null);
             fetchPendingQuizzes();
         } catch (error) {
             console.error("Failed to update quiz settings:", error);
-            alert("Failed to update quiz settings.");
+            toast.error("Failed to update quiz settings.");
         }
     };
 

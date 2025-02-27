@@ -4,6 +4,8 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 export default function TakeTestPage() {
     const { data: session } = useSession();
@@ -36,15 +38,14 @@ export default function TakeTestPage() {
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (!isSubmitted && document.hidden) {
-                alert("⚠️ Warning: You switched tabs! Avoid switching tabs to prevent auto-submission.");
+                toast.warning("Warning: You switched tabs! Avoid switching tabs to prevent auto-submission.");
                 setTabSwitchCount((prev) => prev + 1);
             }
         };
 
         const handleBeforeUnload = (event) => {
             event.preventDefault();
-            event.returnValue = "⚠️ Are you sure you want to leave? Your quiz will be submitted.";
-            return event.returnValue;
+            event.returnValue = " Are you sure you want to leave? Your quiz will be submitted.";
         };
 
         if (!isSubmitted) {
@@ -61,7 +62,7 @@ export default function TakeTestPage() {
     // Auto-submit on excessive tab switching
     useEffect(() => {
         if (!isSubmitted && tabSwitchCount >= 3) {
-            alert("❌ You switched tabs too many times! Your quiz is being auto-submitted.");
+            toast.error("You switched tabs too many times! Your quiz is being auto-submitted.");
             handleSubmitQuiz();
         }
     }, [tabSwitchCount, isSubmitted]);
@@ -117,13 +118,13 @@ export default function TakeTestPage() {
                 studentEmail: session?.user?.email,
             });
             if (res.data.success) {
-                alert("✅ Quiz submitted successfully!");
+                toast.success("Quiz submitted successfully!");
                 router.push("/pages/student/history");
             } else {
-                alert(res.data.message || "❌ Failed to submit quiz.");
+                toast.error(res.data.message || "Failed to submit quiz.");
             }
         } catch (err) {
-            alert("⚠️ Error submitting the quiz.");
+            toast.error("Error submitting the quiz.");
         }
     };
 
