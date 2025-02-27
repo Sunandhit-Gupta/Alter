@@ -8,7 +8,6 @@ import Navbar from "./components/navbar";
 import "./globals.css";
 import { toast } from "react-toastify";
 
-
 function AuthGuard({ children }) {
     const { data: session, status } = useSession();
     const router = useRouter();
