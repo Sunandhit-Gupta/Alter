@@ -1,209 +1,184 @@
 "use client";
 
+import FullscreenPrompt from "@/app/components/FullScreenPrompt";
+import QuizQuestions from "@/app/components/QuizQuestions";
+import QuizTimer from "@/app/components/QuizTimer";
+import useCopyPasteBlocker from "@/app/hooks/useCopyPasteBlocker";
+import useFullscreenManager from "@/app/hooks/useFullscreenManager";
+import useQuizData from "@/app/hooks/useQuizData";
+import useTabMonitor from "@/app/hooks/useTabMonitor";
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
 export default function TakeTestPage() {
-    const { data: session } = useSession();
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const quizId = searchParams.get("quizId");
+  const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const quizId = searchParams.get("quizId");
+  const hasSubmitted = useRef(false);
 
-    const [isBlurred, setIsBlurred] = useState(false);
-    const [questions, setQuestions] = useState([]);
-    const [responses, setResponses] = useState({});
-    const [error, setError] = useState("");
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [responses, setResponses] = useState({});
+  const [quizInfo, setQuizInfo] = useState(null);
 
-    useEffect(() => {
-        const enterFullscreen = () => {
-            const elem = document.documentElement;
-            if (elem.requestFullscreen) {
-                elem.requestFullscreen();
-            } else if (elem.mozRequestFullScreen) {
-                elem.mozRequestFullScreen();
-            } else if (elem.webkitRequestFullscreen) {
-                elem.webkitRequestFullscreen();
-            } else if (elem.msRequestFullscreen) {
-                elem.msRequestFullscreen();
-            }
-        };
+  // Custom hooks
+  const { isBlurred, handleGoFullscreen } = useFullscreenManager(isSubmitted);
+  const { tabSwitchCount } = useTabMonitor(isSubmitted, () => handleSubmitQuiz());
+  useCopyPasteBlocker();
+  const { questions, error, loading, quizData } = useQuizData(quizId, isSubmitted, setResponses);
 
-        const handleFullscreenChange = () => {
-            if (!document.fullscreenElement && !isSubmitted) {
-                toast.warning("Warning: You exited fullscreen! Click the button to re-enter.");
-                setTabSwitchCount((prev) => prev + 1);
-                setIsBlurred(true);
-            }
-        };
+  // Set quiz info when data is loaded
+  useEffect(() => {
+    if (quizData) {
+      setQuizInfo(quizData);
+    }
+  }, [quizData]);
 
-        enterFullscreen();
-        document.addEventListener("fullscreenchange", handleFullscreenChange);
+  // Handle answer changes
+  const handleAnswerChange = (questionId, answer, questionType) => {
+    setResponses(prev => {
+      const newResponses = { ...prev };
 
-        return () => {
-            document.removeEventListener("fullscreenchange", handleFullscreenChange);
-        };
-    }, [isSubmitted]);
+      if (questionType === "Subjective") {
+        newResponses[questionId] = [answer];
+      } else if (questionType === "Single Correct MCQ") {
+        newResponses[questionId] = [answer];
+      } else {
+        // Multiple Correct MCQ
+        const currentAnswers = [...(prev[questionId] || [])];
+        const answerIndex = currentAnswers.indexOf(answer);
 
-    const handleGoFullscreen = () => {
-        const elem = document.documentElement;
-        if (elem.requestFullscreen) {
-            elem.requestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-            elem.mozRequestFullScreen();
-        } else if (elem.webkitRequestFullscreen) {
-            elem.webkitRequestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-            elem.msRequestFullscreen();
-        }
-        setIsBlurred(false);
-    };
-
-    useEffect(() => {
-        const preventActions = (e) => e.preventDefault();
-        document.addEventListener("copy", preventActions);
-        document.addEventListener("paste", preventActions);
-        document.addEventListener("contextmenu", preventActions);
-        document.body.style.userSelect = "none";
-        return () => {
-            document.removeEventListener("copy", preventActions);
-            document.removeEventListener("paste", preventActions);
-            document.removeEventListener("contextmenu", preventActions);
-            document.body.style.userSelect = "auto";
-        };
-    }, []);
-
-    useEffect(() => {
-        const handleVisibilityChange = () => {
-            if (!isSubmitted && document.hidden) {
-                toast.warning("Warning: You switched tabs! Avoid switching tabs to prevent auto-submission.");
-                setTabSwitchCount((prev) => prev + 1);
-            }
-        };
-
-        const handleBeforeUnload = (event) => {
-            event.preventDefault();
-            event.returnValue = "Are you sure you want to leave? Your quiz will be submitted.";
-        };
-
-        if (!isSubmitted) {
-            document.addEventListener("visibilitychange", handleVisibilityChange);
-            window.addEventListener("beforeunload", handleBeforeUnload);
+        if (answerIndex === -1) {
+          currentAnswers.push(answer);
+        } else {
+          currentAnswers.splice(answerIndex, 1);
         }
 
-        return () => {
-            document.removeEventListener("visibilitychange", handleVisibilityChange);
-            window.removeEventListener("beforeunload", handleBeforeUnload);
-        };
-    }, [isSubmitted]);
+        newResponses[questionId] = currentAnswers;
+      }
 
-    useEffect(() => {
-        if (!isSubmitted && tabSwitchCount >= 3) {
-            toast.error("You switched tabs too many times! Your quiz is being auto-submitted.");
-            handleSubmitQuiz();
-        }
-    }, [tabSwitchCount, isSubmitted]);
+      return newResponses;
+    });
+  };
 
-    useEffect(() => {
-        const fetchQuestions = async () => {
-            if (isSubmitted) return;
-            try {
-                const res = await axios.get(`/api/quiz/${quizId}/questions`);
-                if (res.data.success) {
-                    setQuestions(res.data.questions);
-                    const initialResponses = {};
-                    res.data.questions.forEach((q) => {
-                        initialResponses[q._id] = [];
-                    });
-                    setResponses(initialResponses);
-                } else {
-                    setError(res.data.message);
-                }
-            } catch (err) {
-                setError("Failed to load quiz questions.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        if (quizId) fetchQuestions();
-    }, [quizId, isSubmitted]);
+  // Submit quiz
+  async function handleSubmitQuiz() {
+    if (hasSubmitted.current) return;  // Prevent multiple submissions
+    hasSubmitted.current = true;
+    setIsSubmitted(true);
+    setIsSubmitting(true);
 
-    const handleSubmitQuiz = async () => {
-        try {
-            const res = await axios.post("/api/quiz/submitted", {
-                quizId,
-                responses,
-                studentEmail: session?.user?.email,
-            });
-            if (res.data.success) {
-                toast.success("Quiz submitted successfully!");
-                router.push("/pages/student/history");
-            } else {
-                toast.error(res.data.message || "Failed to submit quiz.");
-            }
-        } catch (err) {
-            toast.error("Error submitting the quiz.");
-        }
-    };
+    try {
+      const res = await axios.post("/api/quiz/submitted", {
+        quizId,
+        responses,
+        studentEmail: session?.user?.email,
+      });
 
-    return (
-        <>
-                    {(isBlurred &&
-                <div className="fixed inset-0 flex flex-col justify-center items-center bg-black bg-opacity-70 z-50">
-                    <p className="text-white text-xl mb-4">⚠ You exited fullscreen! Click below to re-enter.</p>
-                    <button 
-                        onClick={handleGoFullscreen} 
-                        className="bg-red-500 text-white px-6 py-3 rounded-lg text-xl font-semibold hover:bg-red-600 pointer-events-auto"
-                    >
-                        🔲 Re-Enter Fullscreen
-                    </button>
-                </div>
-            )}
-        <div className={`p-6 min-h-screen ${isBlurred ? "filter blur-lg pointer-events-none" : ""}`}>
+      if (res.data.success) {
+        toast.success("Quiz submitted successfully!");
+        router.push("/pages/student/history");
+      } else {
+        toast.error(res.data.message || "Failed to submit quiz.");
+        // Allow resubmission if it failed
+        hasSubmitted.current = false;
+        setIsSubmitting(false);
+      }
+    } catch (err) {
+      toast.error("Error submitting the quiz.");
+      // Allow resubmission if an error occurs
+      hasSubmitted.current = false;
+      setIsSubmitting(false);
+    }
+  }
 
-    
-            <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">📝 Take Test</h1>
-    
-            <div className="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-lg">
-                {questions.map((question) => (
-                    <div key={question._id} className="mb-6">
-                        <p className="font-semibold text-lg mb-3 text-gray-800">{question.text}</p>
-                        {question.type === "Subjective" ? (
-                            <textarea
-                                className="w-full p-3 border rounded-lg"
-                                placeholder="Type your answer here..."
-                                value={responses[question._id]?.[0] || ""}
-                                onChange={(e) => handleAnswerChange(question._id, e.target.value, question.type)}
-                            />
-                        ) : (
-                            question.options.map((option) => (
-                                <label key={option} className="block p-3 border rounded-lg cursor-pointer hover:bg-gray-200 flex items-center gap-2">
-                                    <input 
-                                        type={question.type === "Single Correct MCQ" ? "radio" : "checkbox"} 
-                                        name={`q-${question._id}`} 
-                                        value={option} 
-                                        onChange={() => handleAnswerChange(question._id, option, question.type)} 
-                                    />
-                                    <span className="text-gray-700">{option}</span>
-                                </label>
-                            ))
-                        )}
-                    </div>
-                ))}
-                <button 
-                    onClick={handleSubmitQuiz} 
-                    className="w-full mt-4 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600"
-                >
-                    📤 Submit Quiz
-                </button>
-            </div>
+  // Memoize the timer end handler to prevent unnecessary re-renders
+  const handleTimerEnd = useCallback(() => {
+    toast.info("Time's up! Submitting your quiz automatically.");
+    handleSubmitQuiz();
+  }, [handleSubmitQuiz]);
+
+  if (loading) {
+    return <div className="text-center p-8">Loading quiz questions...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-8 text-red-500">{error}</div>;
+  }
+
+  return (
+    <>
+      {isBlurred && <FullscreenPrompt onGoFullscreen={handleGoFullscreen} />}
+
+      <div className={`p-6 min-h-screen ${isBlurred ? "filter blur-lg pointer-events-none" : ""}`}>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-blue-700">
+            📝 {quizInfo?.quizTitle || 'Take Test'}
+          </h1>
+
+          {quizInfo?.duration && (
+            <QuizTimer
+              duration={quizInfo.duration}
+              onTimerEnd={handleTimerEnd}
+              isSubmitted={isSubmitted}
+            />
+          )}
         </div>
-        </>
-    );
+
+        {quizInfo?.shuffleQuestions && (
+          <div className="mb-4 p-2 bg-yellow-100 text-yellow-800 rounded-md">
+            Note: Questions and options are randomly shuffled for this test.
+          </div>
+        )}
+
+        <div className="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-lg">
+          <QuizQuestions
+            questions={questions}
+            responses={responses}
+            onAnswerChange={handleAnswerChange}
+          />
+
+          <button
+            onClick={handleSubmitQuiz}
+            className="w-full mt-4 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 flex items-center justify-center"
+            disabled={isSubmitted}
+          >
+            {isSubmitting ? (
+              // Loading animation (spinner + text)
+              <div className="flex items-center">
+                <svg
+                  className="animate-spin h-5 w-5 mr-3 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v8H4z"
+                  ></path>
+                </svg>
+                <span>Submitting...</span>
+              </div>
+            ) : (
+              "📤 Submit Quiz"
+            )}
+          </button>
+        </div>
+      </div>
+    </>
+  );
 }

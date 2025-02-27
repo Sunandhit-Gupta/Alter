@@ -1,7 +1,7 @@
 "use client";
-import Link from "next/link";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function History() {
@@ -52,7 +52,7 @@ export default function History() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-bold mb-4">📜 Quiz History</h1>
+            <h1 className="text-2xl font-bold mb-4">📜 History</h1>
 
             {history.length > 0 ? (
                 <ul className="space-y-4">

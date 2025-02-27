@@ -22,6 +22,12 @@ export async function POST(req) {
         if (!user) return NextResponse.json({ success: false, message: "❌ User not found." }, { status: 404 });
         if (!quiz) return NextResponse.json({ success: false, message: "❌ Quiz not found." }, { status: 404 });
 
+        // 🚨 Check if the student has already submitted this quiz
+        const existingResponse = await StudentResponse.findOne({ quizId, studentId: user._id });
+        if (existingResponse) {
+            return NextResponse.json({ success: false, message: "⛔ Quiz already submitted. You cannot submit again." }, { status: 403 });
+        }
+
         let totalAutoScore = 0;
 
         // 📝 Evaluate Responses
