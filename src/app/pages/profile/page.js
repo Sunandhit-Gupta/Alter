@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { signOut, useSession } from "next-auth/react";
 import axios from "axios";
+import { signOut, useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 export default function Profile() {
     const { data: session, status } = useSession();
@@ -31,34 +31,37 @@ export default function Profile() {
     }, [session]);
 
     if (status === "loading" || loading) {
-        return <p>Loading profile...</p>;
+        return <p className="text-center text-gray-500">Loading profile...</p>;
     }
 
     if (!session || !userData) {
-        return <p>You are not logged in. Please log in to view your profile.</p>;
+        return <p className="text-center text-red-500">You are not logged in. Please log in to view your profile.</p>;
     }
 
     const { name, email, role, rollNumber, batch, courseCodes, createdAt, updatedAt } = userData;
 
     return (
-        <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-lg mt-10">
-            <h1 className="text-3xl font-bold mb-5">Profile</h1>
+        <div className="max-w-lg mx-auto mt-10 p-6 bg-white shadow-md rounded-2xl border border-gray-200 text-gray-800">
+            <div className="text-center mb-6">
+                <h1 className="text-3xl font-semibold">Profile</h1>
+                <p className="text-gray-500 text-sm">Your personal details</p>
+            </div>
 
-            <div className="space-y-4">
-                <div><strong>Name:</strong> {name || "N/A"}</div>
-                <div><strong>Email:</strong> {email || "N/A"}</div>
-                <div><strong>Role:</strong> {role || "N/A"}</div>
-                {role === "student" && <div><strong>Roll Number:</strong> {rollNumber || "N/A"}</div>}
-                {batch && <div><strong>Batch:</strong> {batch}</div>}
+            <div className="space-y-4 text-lg">
+                <div><span className="font-semibold">Name:</span> {name || "N/A"}</div>
+                <div><span className="font-semibold">Email:</span> {email || "N/A"}</div>
+                <div><span className="font-semibold">Role:</span> {role || "N/A"}</div>
+                {role === "student" && <div><span className="font-semibold">Roll Number:</span> {rollNumber || "N/A"}</div>}
+                {batch && <div><span className="font-semibold">Batch:</span> {batch}</div>}
                 {courseCodes?.length > 0 && (
-                    <div><strong>Courses:</strong> {courseCodes.join(", ")}</div>
+                    <div><span className="font-semibold">Courses:</span> {courseCodes.join(", ")}</div>
                 )}
-                <div><strong>Created At:</strong> {new Date(createdAt).toLocaleString()}</div>
-                <div><strong>Updated At:</strong> {new Date(updatedAt).toLocaleString()}</div>
+                <div><span className="font-semibold">Created At:</span> {new Date(createdAt).toLocaleString()}</div>
+                <div><span className="font-semibold">Updated At:</span> {new Date(updatedAt).toLocaleString()}</div>
             </div>
 
             <button
-                className="mt-6 bg-red-500 text-white py-2 px-4 rounded hover:bg-red-700"
+                className="mt-6 w-full bg-red-500 text-white py-2 px-4 rounded-lg hover:bg-red-600 transition"
                 onClick={() => signOut()}
             >
                 Sign Out
