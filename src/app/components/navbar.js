@@ -18,7 +18,7 @@ export default function Navbar() {
   if (status === "loading") return <div className="text-center my-5">Loading...</div>;
 
   const handleSignOut = () => {
-    signOut({ callbackUrl: "/auth/login" });
+    signOut({ callbackUrl: "/" });
   };
 
   const toggleDarkMode = () => {

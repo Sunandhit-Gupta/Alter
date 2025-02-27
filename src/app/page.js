@@ -1,118 +1,190 @@
 "use client";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import axios from "axios";
+import LoadingSkeleton from "./components/LoadingSkeleton";
 
 export default function Home() {
   const { data: session, status } = useSession();
-  const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (session?.user?.email) {
+    if (status === "authenticated" && session?.user?.email) {
+      const fetchUserData = async () => {
         try {
           const response = await axios.get(`/api/user/profile?email=${session.user.email}`);
           if (response.data.success) {
-            setUserData(response.data.user);
+            const role = response.data.user.role;
+            if (role === "student") {
+              router.push("/pages/dashboard/student");
+            } else if (role === "teacher") {
+              router.push("/pages/dashboard/teacher");
+            }
           }
         } catch (error) {
           console.error("Error fetching user data:", error);
         } finally {
           setLoading(false);
         }
-      }
-    };
-    fetchUserData();
-  }, [session]);
+      };
+      fetchUserData();
+    } else if (status === "unauthenticated") {
+      setLoading(false);
+      router.push("/");
 
-  // Skeleton Component
-  const SkeletonCard = () => (
-    <div className="bg-gray-200 p-6 rounded-lg shadow-md animate-pulse">
-      <div className="h-6 w-3/4 bg-gray-300 rounded mb-2"></div>
-      <div className="h-4 w-full bg-gray-300 rounded mb-4"></div>
-      <div className="h-4 w-1/3 bg-gray-300 rounded"></div>
-    </div>
-  );
+    }
+  }, [session, status, router]);
 
-  const SkeletonHeader = () => (
-    <div className="h-8 w-1/3 bg-gray-300 rounded mb-6 animate-pulse"></div>
-  );
+  if (loading || status === "loading") {
+    return <LoadingSkeleton />;
+  }
 
-  if (status === "loading" || loading) {
+  // Public Landing Page for Unauthenticated Users
+  if (status === "unauthenticated") {
     return (
-      <div className="container mx-auto p-4">
-        <SkeletonHeader />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <SkeletonCard />
-          <SkeletonCard />
-          <SkeletonCard />
-        </div>
+      <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
+        {/* Navigation Bar */}
+        <nav className="bg-white shadow-sm py-4">
+          <div className="container mx-auto px-4 flex justify-between items-center">
+          <Link href="/" className="group flex items-center font-bold text-3xl font-sans">
+            <span className="text-[#4A90E2] group-hover:text-[#FF6F61]">Quiz</span>
+            <span className="text-[#FF6F61] ml-1 group-hover:text-[#4A90E2]">Mate</span>
+          </Link>
+            <Link 
+              href="/auth/login"
+              className="bg-[#4A90E2] hover:bg-blue-600 text-white py-2 px-6 rounded-md transition"
+            >
+              Log In
+            </Link>
+          </div>
+        </nav>
+
+        {/* Hero Section */}
+        <section className="container mx-auto px-4 py-12 md:py-24">
+          <div className="flex flex-col md:flex-row items-center">
+            <div className="md:w-1/2 md:pr-8">
+              <h1 className="text-4xl md:text-5xl font-bold text-gray-800 mb-6">
+                Learn and Test Your Knowledge
+              </h1>
+              <p className="text-xl text-gray-600 mb-8">
+                Join our interactive quiz platform designed for students and teachers.
+                Create, participate, and track your progress all in one place.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link 
+                  href="auth/register"
+                  className="bg-[#FF6F61] hover:bg-red-500 text-white py-3 px-8 rounded-md font-semibold transition"
+                >
+                  Get Started
+                </Link>
+                <Link 
+                  href="/about" 
+                  className="border border-gray-300 text-gray-700 py-3 px-8 rounded-md font-semibold hover:bg-gray-50 transition"
+                >
+                  Learn More
+                </Link>
+              </div>
+            </div>
+            <div className="md:w-1/2 mt-12 md:mt-0">
+              <div className="bg-white p-8 rounded-lg shadow-lg">
+                <div className="bg-blue-50 p-6 rounded-md mb-6">
+                  <h3 className="text-xl font-semibold text-[#4A90E2] mb-2">For Students</h3>
+                  <p className="text-gray-600">
+                    Participate in quizzes, track performance, and access learning resources.
+                  </p>
+                </div>
+                <div className="bg-red-50 p-6 rounded-md">
+                  <h3 className="text-xl font-semibold text-[#FF6F61] mb-2">For Teachers</h3>
+                  <p className="text-gray-600">
+                    Create and manage quizzes, monitor student progress, and organize resources.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        {/* <section className="bg-gray-50 py-12 md:py-24">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
+              Platform Features
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <FeatureCard 
+                title="Interactive Quizzes"
+                description="Engaging quizzes with various question types to test and improve your knowledge."
+              />
+              <FeatureCard 
+                title="Performance Tracking"
+                description="Detailed statistics and analytics to monitor your progress."
+              />
+              <FeatureCard 
+                title="Resource Library"
+                description="Access learning materials and study resources to help you prepare."
+              />
+            </div>
+          </div>
+        </section> */}
+
+        {/* Call to Action */}
+        <section className="container mx-auto px-4 py-12 md:py-24 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">
+            Ready to Get Started?
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Join our community of learners and educators. Sign in to access all features.
+          </p>
+          <Link 
+            href="auth/register"
+            className="bg-[#4A90E2] hover:bg-blue-600 text-white py-3 px-8 rounded-md font-semibold transition"
+          >
+            Sign In Now
+          </Link>
+        </section>
+
+        {/* Footer */}
+        <footer className="bg-gray-800 text-white py-8">
+          <div className="container mx-auto px-4">
+            <div className="flex flex-col md:flex-row justify-between items-center">
+              <div className="mb-4 md:mb-0">
+                <h2 className="text-xl font-bold">QuizMate</h2>
+                <p className="text-gray-400 mt-2">© 2025 All Rights Reserved</p>
+              </div>
+              <div className="flex space-x-4">
+                <Link href="/about" className="text-gray-300 hover:text-white transition">
+                  About
+                </Link>
+                <Link href="/contact" className="text-gray-300 hover:text-white transition">
+                  Contact
+                </Link>
+                <Link href="/privacy" className="text-gray-300 hover:text-white transition">
+                  Privacy Policy
+                </Link>
+              </div>
+            </div>
+          </div>
+        </footer>
       </div>
     );
   }
 
-  const userRole = userData?.role || "student";
-  const userName = userData?.name || "User"; // Name from API
-
   return (
-    <div className="container mx-auto p-4">
-      {/* Welcome Header */}
-      <h1 className="text-3xl font-bold text-[#4A90E2] mb-6">
-        Welcome, {userName}!
-      </h1>
+    <div className="container mx-auto p-4 flex flex-col items-center justify-center min-h-screen">
+      <h1 className="text-3xl font-bold text-[#4A90E2] mb-6">Welcome to QuizMate</h1>
+      <p className="text-gray-600">Redirecting to your dashboard...</p>
+    </div>
+  );
+}
 
-      {/* Dashboard Content */}
-      {userRole === "student" ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-xl font-semibold text-[#FF6F61]">Ongoing Quizzes</h2>
-            <p className="mt-2 text-gray-600">Jump into quizzes happening now.</p>
-            <Link href="/pages/student/ongoingQuizes" className="mt-4 inline-block text-[#4A90E2] hover:underline font-medium">
-              Start Now
-            </Link>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-xl font-semibold text-[#FF6F61]">Upcoming Quizzes</h2>
-            <p className="mt-2 text-gray-600">Get ready for what’s next.</p>
-            <Link href="/pages/student/upcomingQuizes" className="mt-4 inline-block text-[#4A90E2] hover:underline font-medium">
-              View Schedule
-            </Link>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-xl font-semibold text-[#FF6F61]">History</h2>
-            <p className="mt-2 text-gray-600">Review your past performance.</p>
-            <Link href="/pages/student/history" className="mt-4 inline-block text-[#4A90E2] hover:underline font-medium">
-              See Details
-            </Link>
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-xl font-semibold text-[#FF6F61]">Create Quiz</h2>
-            <p className="mt-2 text-gray-600">Design a new quiz for students.</p>
-            <Link href="/pages/createQuiz" className="mt-4 inline-block text-[#4A90E2] hover:underline font-medium">
-              Create Now
-            </Link>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-xl font-semibold text-[#FF6F61]">Pending Quizzes</h2>
-            <p className="mt-2 text-gray-600">Review quizzes awaiting approval.</p>
-            <Link href="/pages/pendingQuiz" className="mt-4 inline-block text-[#4A90E2] hover:underline font-medium">
-              Manage Now
-            </Link>
-          </div>
-          <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 className="text-xl font-semibold text-[#FF6F61]">History</h2>
-            <p className="mt-2 text-gray-600">See past quiz activity.</p>
-            <Link href="/pages/history" className="mt-4 inline-block text-[#4A90E2] hover:underline font-medium">
-              View History
-            </Link>
-          </div>
-        </div>
-      )}
+function FeatureCard({ title, description }) {
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition">
+      <h3 className="text-xl font-semibold text-gray-800 mb-2">{title}</h3>
+      <p className="text-gray-600">{description}</p>
     </div>
   );
 }
