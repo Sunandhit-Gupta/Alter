@@ -13,6 +13,7 @@ export default function TakeTestPage() {
     const router = useRouter();
     const quizId = searchParams.get("quizId");
 
+    const [isBlurred, setIsBlurred] = useState(false);
     const [questions, setQuestions] = useState([]);
     const [responses, setResponses] = useState({});
     const [error, setError] = useState("");
@@ -20,21 +21,64 @@ export default function TakeTestPage() {
     const [loading, setLoading] = useState(true);
     const [tabSwitchCount, setTabSwitchCount] = useState(0);
 
-    // Prevent Text Selection and Copy-Paste
     useEffect(() => {
-        document.addEventListener("copy", (e) => e.preventDefault());
-        document.addEventListener("paste", (e) => e.preventDefault());
-        document.addEventListener("contextmenu", (e) => e.preventDefault());
+        const enterFullscreen = () => {
+            const elem = document.documentElement;
+            if (elem.requestFullscreen) {
+                elem.requestFullscreen();
+            } else if (elem.mozRequestFullScreen) {
+                elem.mozRequestFullScreen();
+            } else if (elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            } else if (elem.msRequestFullscreen) {
+                elem.msRequestFullscreen();
+            }
+        };
+
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement && !isSubmitted) {
+                toast.warning("Warning: You exited fullscreen! Click the button to re-enter.");
+                setTabSwitchCount((prev) => prev + 1);
+                setIsBlurred(true);
+            }
+        };
+
+        enterFullscreen();
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+
+        return () => {
+            document.removeEventListener("fullscreenchange", handleFullscreenChange);
+        };
+    }, [isSubmitted]);
+
+    const handleGoFullscreen = () => {
+        const elem = document.documentElement;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+            elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) {
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+            elem.msRequestFullscreen();
+        }
+        setIsBlurred(false);
+    };
+
+    useEffect(() => {
+        const preventActions = (e) => e.preventDefault();
+        document.addEventListener("copy", preventActions);
+        document.addEventListener("paste", preventActions);
+        document.addEventListener("contextmenu", preventActions);
         document.body.style.userSelect = "none";
         return () => {
-            document.removeEventListener("copy", (e) => e.preventDefault());
-            document.removeEventListener("paste", (e) => e.preventDefault());
-            document.removeEventListener("contextmenu", (e) => e.preventDefault());
+            document.removeEventListener("copy", preventActions);
+            document.removeEventListener("paste", preventActions);
+            document.removeEventListener("contextmenu", preventActions);
             document.body.style.userSelect = "auto";
         };
     }, []);
 
-    // Prevent Tab Switching and Alert on Change
     useEffect(() => {
         const handleVisibilityChange = () => {
             if (!isSubmitted && document.hidden) {
@@ -45,7 +89,7 @@ export default function TakeTestPage() {
 
         const handleBeforeUnload = (event) => {
             event.preventDefault();
-            event.returnValue = " Are you sure you want to leave? Your quiz will be submitted.";
+            event.returnValue = "Are you sure you want to leave? Your quiz will be submitted.";
         };
 
         if (!isSubmitted) {
@@ -59,7 +103,6 @@ export default function TakeTestPage() {
         };
     }, [isSubmitted]);
 
-    // Auto-submit on excessive tab switching
     useEffect(() => {
         if (!isSubmitted && tabSwitchCount >= 3) {
             toast.error("You switched tabs too many times! Your quiz is being auto-submitted.");
@@ -67,7 +110,6 @@ export default function TakeTestPage() {
         }
     }, [tabSwitchCount, isSubmitted]);
 
-    // Fetch Quiz Questions
     useEffect(() => {
         const fetchQuestions = async () => {
             if (isSubmitted) return;
@@ -92,24 +134,6 @@ export default function TakeTestPage() {
         if (quizId) fetchQuestions();
     }, [quizId, isSubmitted]);
 
-    // Handle Answer Change
-    const handleAnswerChange = (questionId, answer, type) => {
-        setResponses((prev) => {
-            const current = prev[questionId] || [];
-            if (type === "Single Correct MCQ") {
-                return { ...prev, [questionId]: [answer] };
-            }
-            if (type === "Multiple Correct MCQ") {
-                const updatedAnswers = current.includes(answer)
-                    ? current.filter((a) => a !== answer)
-                    : [...current, answer];
-                return { ...prev, [questionId]: updatedAnswers };
-            }
-            return { ...prev, [questionId]: [answer] };
-        });
-    };
-
-    // Submit Quiz
     const handleSubmitQuiz = async () => {
         try {
             const res = await axios.post("/api/quiz/submitted", {
@@ -128,14 +152,24 @@ export default function TakeTestPage() {
         }
     };
 
-    if (loading) return <p>🔄 Loading questions...</p>;
-    if (isSubmitted) return <p className="text-red-500">✅ You have already submitted this quiz.</p>;
-    if (error) return <p className="text-red-500">⚠️ {error}</p>;
-    if (!questions.length) return <p>❌ No questions found for this quiz.</p>;
-
     return (
-        <div className="p-6 bg-gray-100 min-h-screen">
+        <>
+                    {(isBlurred &&
+                <div className="fixed inset-0 flex flex-col justify-center items-center bg-black bg-opacity-70 z-50">
+                    <p className="text-white text-xl mb-4">⚠ You exited fullscreen! Click below to re-enter.</p>
+                    <button 
+                        onClick={handleGoFullscreen} 
+                        className="bg-red-500 text-white px-6 py-3 rounded-lg text-xl font-semibold hover:bg-red-600 pointer-events-auto"
+                    >
+                        🔲 Re-Enter Fullscreen
+                    </button>
+                </div>
+            )}
+        <div className={`p-6 min-h-screen ${isBlurred ? "filter blur-lg pointer-events-none" : ""}`}>
+
+    
             <h1 className="text-3xl font-bold mb-6 text-center text-blue-700">📝 Take Test</h1>
+    
             <div className="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-lg">
                 {questions.map((question) => (
                     <div key={question._id} className="mb-6">
@@ -150,15 +184,26 @@ export default function TakeTestPage() {
                         ) : (
                             question.options.map((option) => (
                                 <label key={option} className="block p-3 border rounded-lg cursor-pointer hover:bg-gray-200 flex items-center gap-2">
-                                    <input type={question.type === "Single Correct MCQ" ? "radio" : "checkbox"} name={`q-${question._id}`} value={option} onChange={() => handleAnswerChange(question._id, option, question.type)} />
+                                    <input 
+                                        type={question.type === "Single Correct MCQ" ? "radio" : "checkbox"} 
+                                        name={`q-${question._id}`} 
+                                        value={option} 
+                                        onChange={() => handleAnswerChange(question._id, option, question.type)} 
+                                    />
                                     <span className="text-gray-700">{option}</span>
                                 </label>
                             ))
                         )}
                     </div>
                 ))}
-                <button onClick={handleSubmitQuiz} className="w-full mt-4 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600">📤 Submit Quiz</button>
+                <button 
+                    onClick={handleSubmitQuiz} 
+                    className="w-full mt-4 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600"
+                >
+                    📤 Submit Quiz
+                </button>
             </div>
         </div>
+        </>
     );
 }
