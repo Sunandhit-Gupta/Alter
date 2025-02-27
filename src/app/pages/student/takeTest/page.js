@@ -1,10 +1,8 @@
 "use client";
 
-import FullscreenPrompt from "@/app/components/FullScreenPrompt";
 import QuizQuestions from "@/app/components/QuizQuestions";
 import QuizTimer from "@/app/components/QuizTimer";
 import useCopyPasteBlocker from "@/app/hooks/useCopyPasteBlocker";
-import useFullscreenManager from "@/app/hooks/useFullscreenManager";
 import useQuizData from "@/app/hooks/useQuizData";
 import useTabMonitor from "@/app/hooks/useTabMonitor";
 import axios from "axios";
