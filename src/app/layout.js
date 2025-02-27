@@ -6,6 +6,7 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Navbar from "./components/navbar";
 import "./globals.css";
+import { toast } from "react-toastify";
 
 
 function AuthGuard({ children }) {

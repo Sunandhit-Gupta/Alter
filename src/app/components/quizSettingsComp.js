@@ -14,7 +14,9 @@ export default function QuizSettingsComp({ quizId, onSubmit }) {
 const convertToLocalTime = (utcDateString) => {
     if (!utcDateString) return "";
     const localDate = new Date(utcDateString);
-    console.log("inside :",localDate.toISOString().slice(0, 16));
+    console.log("fetched time", localDate);
+    console.log("Local Time",localDate.toLocaleString("en-GB", { timeZone: "UTC" }));
+
     return localDate.toISOString().slice(0, 16);  // Format for datetime-local
 };
 
@@ -49,11 +51,10 @@ const convertToLocalTime = (utcDateString) => {
                 const res = await axios.get(`/api/quiz/settings?quizId=${quizId}`);
                 const { shuffleQuestions, duration, startTime } = res.data.settings;
 
-                console.log("time got from api", convertToLocalTime(startTime));
                 setShuffleQuestions(shuffleQuestions);
                 setDuration(duration);
                 setStartTime(startTime ? convertToLocalTime(startTime) : "");
-                console.log("After:", startTime);
+
             } catch (error) {
                 console.error("Failed to fetch quiz settings:", error);
             } finally {

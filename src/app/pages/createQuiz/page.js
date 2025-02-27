@@ -4,6 +4,8 @@ import QuizQuesComp from '@/app/components/quizQuesComp';
 import QuizSettingsComp from '@/app/components/quizSettingsComp';
 import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
+import { toast } from "react-toastify";
+
 
 export default function CreateQuiz() {
     const { data: session, status } = useSession();

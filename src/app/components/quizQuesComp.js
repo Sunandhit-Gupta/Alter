@@ -7,6 +7,8 @@ import QuizSettingsComp from "@/app/components/quizSettingsComp";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+
 
 export default function QuizQuesComp({ quizId }) {
     const [questions, setQuestions] = useState([]);

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import { toast } from "react-toastify";
 
 export default function QuizDetailForm({ setQuizId, onNext }) {
     const { data: session } = useSession();
