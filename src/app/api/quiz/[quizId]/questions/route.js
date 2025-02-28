@@ -1,5 +1,5 @@
 import Quiz from '@/app/models/quiz';
-import Question from '@/app/models/question'
+// import Question from '@/app/models/question'
 import { connectToDatabase } from '@/lib/mongodb';
 import { NextResponse } from 'next/server';
 import Question from '@/app/models/question';
