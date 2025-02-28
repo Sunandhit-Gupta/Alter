@@ -25,6 +25,7 @@ export default function TakeTestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responses, setResponses] = useState({});
   const [quizInfo, setQuizInfo] = useState(null);
+  const [totalMarks, setTotalMarks] = useState(0); // State for total marks
 
   // Custom hooks
   const { isBlurred, handleGoFullscreen } = useFullscreenManager(isSubmitted);
@@ -32,12 +33,16 @@ export default function TakeTestPage() {
   useCopyPasteBlocker();
   const { questions, error, loading, quizData } = useQuizData(quizId, isSubmitted, setResponses);
 
-  // Set quiz info when data is loaded
+  // Set quiz info and calculate total marks
   useEffect(() => {
     if (quizData) {
       setQuizInfo(quizData);
     }
-  }, [quizData]);
+    if (questions && questions.length > 0) {
+      const total = questions.reduce((sum, question) => sum + (question.points || 1), 0);
+      setTotalMarks(total);
+    }
+  }, [quizData, questions]);
 
   // Handle answer changes
   const handleAnswerChange = (questionId, answer, questionType) => {
@@ -68,7 +73,7 @@ export default function TakeTestPage() {
 
   // Submit quiz
   async function handleSubmitQuiz() {
-    if (hasSubmitted.current) return;  // Prevent multiple submissions
+    if (hasSubmitted.current) return;
     hasSubmitted.current = true;
     setIsSubmitted(true);
     setIsSubmitting(true);
@@ -85,19 +90,16 @@ export default function TakeTestPage() {
         router.push("/pages/student/history");
       } else {
         toast.error(res.data.message || "Failed to submit quiz.");
-        // Allow resubmission if it failed
         hasSubmitted.current = false;
         setIsSubmitting(false);
       }
     } catch (err) {
       toast.error("Error submitting the quiz.");
-      // Allow resubmission if an error occurs
       hasSubmitted.current = false;
       setIsSubmitting(false);
     }
   }
 
-  // Memoize the timer end handler to prevent unnecessary re-renders
   const handleTimerEnd = useCallback(() => {
     toast.info("Time's up! Submitting your quiz automatically.");
     handleSubmitQuiz();
@@ -118,8 +120,12 @@ export default function TakeTestPage() {
       <div className={`p-6 min-h-screen ${isBlurred ? "filter blur-lg pointer-events-none" : ""}`}>
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold text-blue-700">
-            📝 {quizInfo?.quizTitle || 'Take Test'}
+            📝 {quizInfo?.quizTitle || "Take Test"}
           </h1>
+
+          <div className="text-lg font-semibold">
+            Total Marks: <span className="text-green-600">{totalMarks}</span>
+          </div>
 
           {quizInfo?.duration && (
             <QuizTimer
@@ -149,7 +155,6 @@ export default function TakeTestPage() {
             disabled={isSubmitted}
           >
             {isSubmitting ? (
-              // Loading animation (spinner + text)
               <div className="flex items-center">
                 <svg
                   className="animate-spin h-5 w-5 mr-3 text-white"

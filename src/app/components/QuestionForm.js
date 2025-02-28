@@ -12,6 +12,15 @@ export default function QuestionForm({ newQuestion, setNewQuestion, handleSaveQu
                 value={newQuestion.text}
                 onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
             />
+            <label className="block text-gray-700 font-medium mt-4">Maximum Score:</label>
+            <input
+                type="number"
+                className="w-full p-2 border border-gray-300 rounded mt-1"
+                min="1"
+                value={newQuestion.points}
+                onChange={(e) => setNewQuestion({ ...newQuestion, points: parseInt(e.target.value) || 1 })}
+            />
+
 
             {(newQuestion.type.includes("MCQ")) && (
                 <div className="mt-4">

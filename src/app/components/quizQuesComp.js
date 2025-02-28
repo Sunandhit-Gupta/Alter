@@ -37,9 +37,11 @@ export default function QuizQuesComp({ quizId }) {
             text: "",
             options: [],
             correctAnswers: type === "Subjective" ? [""] : [],
+            points: 1,  // Default points to 1
         });
         setShowPopup(false);
     };
+
 
 
 const handleDeleteQuestion = async (questionIdentifier) => {
@@ -87,7 +89,6 @@ const handleDeleteQuestion = async (questionIdentifier) => {
             return;
         }
 
-        // Filter out questions that already exist in the database (have _id)
         const newQuestions = questions.filter(q => !q._id);
 
         if (newQuestions.length === 0) {
@@ -99,7 +100,10 @@ const handleDeleteQuestion = async (questionIdentifier) => {
         try {
             const response = await axios.post("/api/quiz/add-questions", {
                 quizId,
-                questions: newQuestions, // Only send new questions
+                questions: newQuestions.map(q => ({
+                    ...q,
+                    points: q.points || 1  // Ensure points are sent
+                })),
             });
 
             if (response.data.success) {
@@ -113,6 +117,7 @@ const handleDeleteQuestion = async (questionIdentifier) => {
             toast.error("An error occurred while submitting questions.");
         }
     };
+
 
     const handleSubmitSettings = async (settings) => {
         try {
