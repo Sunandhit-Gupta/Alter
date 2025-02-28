@@ -52,13 +52,13 @@ export default function StudentDashboard() {
   const userName = userData?.name || "Student";
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-6 py-8">
       {/* Student Dashboard Header */}
       <header className="mb-8">
-        <h1 className="text-3xl font-bold text-[#4A90E2] mb-2">
-          Student Dashboard
+        <h1 className="text-3xl font-bold text-[#4A90E2] mb-2 ">
+        Welcome back, {userName}!
         </h1>
-        <p className="text-gray-600">Welcome back, {userName}!</p>
+        {/* <p className="text-gray-600">Welcome back, {userName}!</p> */}
       </header>
 
       {/* Student Dashboard Content */}
