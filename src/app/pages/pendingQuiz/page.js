@@ -127,24 +127,26 @@ export default function PendingQuiz() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Pending Quizzes</h1>
+    <div className="p-4 sm:p-6 min-h-screen bg-gray-100">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 text-center sm:text-left">
+        Pending Quizzes
+      </h1>
 
       {settingsQuizId ? (
-        <div className="mb-6">
+        <div className="mb-6 w-full max-w-3xl mx-auto">
           <QuizSettingsComp
             quizId={settingsQuizId}
             onSubmit={(settings) => handleSettingsSubmit(settingsQuizId, settings)}
           />
           <button
             onClick={() => setSettingsQuizId(null)}
-            className="mt-4 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500"
+            className="mt-4 px-4 py-2 bg-gray-400 text-white rounded hover:bg-gray-500 w-full sm:w-auto"
           >
             🔙 Back to Quizzes
           </button>
         </div>
       ) : (
-        <ul className="space-y-4">
+        <ul className="space-y-4 w-full max-w-4xl mx-auto">
           {pendingQuizzes.length > 0 ? (
             pendingQuizzes.map((quiz) => (
               <PendingQuizItem
@@ -165,7 +167,7 @@ export default function PendingQuiz() {
               />
             ))
           ) : (
-            <p>No pending quizzes found.</p>
+            <p className="text-center text-gray-500">No pending quizzes found.</p>
           )}
         </ul>
       )}
