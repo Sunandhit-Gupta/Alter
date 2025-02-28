@@ -1,6 +1,6 @@
+import Question from '@/app/models/question';
+import StudentResponse from '@/app/models/studentResponse';
 import { connectToDatabase } from '@/lib/mongodb';
-import Question from '@/models/question';
-import StudentResponse from '@/models/studentResponse';
 
 export async function POST(request) {
     const { quizId, studentId, rollNumber, responses } = await request.json();

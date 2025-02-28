@@ -1,5 +1,5 @@
+import Quiz from '@/app/models/quiz';
 import { connectToDatabase } from '@/lib/mongodb';
-import Quiz from '@/models/quiz';
 
 export async function POST(request) {
     const { quizTitle, description, duration, batch, courseCode, rollRange, uniqueRolls, shuffleQuestions, createdBy } = await request.json();
