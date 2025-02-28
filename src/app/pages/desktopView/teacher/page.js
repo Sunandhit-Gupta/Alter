@@ -4,16 +4,9 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { 
-    Book, 
-    Users, 
-    Award, 
-    Calendar, 
-    ChevronRight, 
-    FileText, 
-    AlertTriangle,
-    Search,
-    ArrowUpDown 
+    Book, Users, Award, Calendar, ChevronRight, FileText, AlertTriangle, Search, ArrowUpDown 
 } from "lucide-react";
+
 export default function DesktopTeacherHistory() {
     const { data: session } = useSession();
     const [quizzes, setQuizzes] = useState([]);
@@ -91,26 +84,26 @@ export default function DesktopTeacherHistory() {
         }).format(date);
     };
 
-    // Calculate total students and average scores across all quizzes
-    const totalStudents = quizzes.reduce((sum, quiz) => sum + (quiz.studentCount || 0), 0);
+    // Calculate average attendance and average score
+    const avgAttendance = quizzes.length > 0 
+        ? Math.round(quizzes.reduce((sum, quiz) => sum + (quiz.studentCount || 0), 0) / quizzes.length) 
+        : 0;
     const avgAllQuizzes = quizzes.length > 0 
-        ? (quizzes.reduce((sum, quiz) => sum + (quiz.avgFinalScore || 0), 0) / quizzes.length).toFixed(1)
+        ? (quizzes.reduce((sum, quiz) => sum + (quiz.avgAutoFinalScore*100 || 0), 0) / quizzes.length).toFixed(2)
         : 0;
 
+        console.log("prerakBoss",avgAllQuizzes);
     // Skeleton Loader Component
     const SkeletonLoader = () => (
         <div className="p-6 animate-pulse">
             <div className="h-8 w-56 bg-gray-300 rounded mb-4"></div>
             <div className="h-5 w-96 bg-gray-200 rounded mb-8"></div>
-            
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
                 {[...Array(3)].map((_, i) => (
                     <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
                 ))}
             </div>
-            
             <div className="h-12 w-full bg-gray-200 rounded mb-6"></div>
-            
             <div className="space-y-4">
                 {[...Array(3)].map((_, index) => (
                     <div key={index} className="h-48 bg-gray-200 rounded-xl"></div>
@@ -166,8 +159,8 @@ export default function DesktopTeacherHistory() {
                     <div className="bg-[#FF6F61] rounded-xl shadow-md p-6 text-white">
                         <div className="flex justify-between items-center">
                             <div>
-                                <p className="text-sm font-medium text-white/80 mb-1">Total Students</p>
-                                <p className="text-2xl font-bold">{totalStudents}</p>
+                                <p className="text-sm font-medium text-white/80 mb-1">Students Per Quiz</p>
+                                <p className="text-2xl font-bold">{avgAttendance}</p> {/* Updated */}
                             </div>
                             <Users className="h-8 w-8 text-white" />
                         </div>
@@ -197,7 +190,6 @@ export default function DesktopTeacherHistory() {
                             />
                             <Search className="h-5 w-5 text-gray-600 absolute left-3 top-2.5" />
                         </div>
-                        
                         <div className="flex gap-2">
                             <button 
                                 onClick={() => requestSort('createdAt')}
@@ -211,7 +203,6 @@ export default function DesktopTeacherHistory() {
                                 Date
                                 <ArrowUpDown className="h-3 w-3 ml-1 text-[#4A90E2]" />
                             </button>
-                            
                             <button 
                                 onClick={() => requestSort('studentCount')}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center ${
@@ -224,7 +215,6 @@ export default function DesktopTeacherHistory() {
                                 Students
                                 <ArrowUpDown className="h-3 w-3 ml-1 text-[#FF6F61]" />
                             </button>
-                            
                             <button 
                                 onClick={() => requestSort('avgFinalScore')}
                                 className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center ${
@@ -260,7 +250,6 @@ export default function DesktopTeacherHistory() {
                                                 {formatDate(quiz.createdAt)}
                                             </div>
                                         </div>
-                                        
                                         <button
                                             onClick={() => router.push(`/pages/quiz/attempts/${quiz._id}`)}
                                             className="mt-4 md:mt-0 flex items-center justify-center px-4 py-2 bg-[#4A90E2] text-white rounded-lg hover:bg-[#357ABD] transition-colors"
@@ -269,9 +258,7 @@ export default function DesktopTeacherHistory() {
                                             <ChevronRight className="h-4 w-4 ml-1 text-white" />
                                         </button>
                                     </div>
-                                    
                                     <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                                        {/* Course Info */}
                                         <div className="flex items-start space-x-3">
                                             <div className="rounded-full bg-[#4A90E2]/10 p-2 flex-shrink-0">
                                                 <Book className="h-5 w-5 text-[#4A90E2]" />
@@ -281,11 +268,8 @@ export default function DesktopTeacherHistory() {
                                                 <p className="font-medium text-gray-800">{quiz.courseCode}</p>
                                             </div>
                                         </div>
-                                        
-                                        {/* Batch Info */}
                                         <div className="flex items-start space-x-3">
                                             <div className="rounded-full bg-[#FF6F61]/10 p-2 flex-shrink-0">
-                                                {/* Corrected: Replaced GraduationCap with Users */}
                                                 <Users className="h-5 w-5 text-[#FF6F61]" />
                                             </div>
                                             <div>
@@ -293,8 +277,6 @@ export default function DesktopTeacherHistory() {
                                                 <p className="font-medium text-gray-800">{quiz.batch}</p>
                                             </div>
                                         </div>
-                                        
-                                        {/* Students Info */}
                                         <div className="flex items-start space-x-3">
                                             <div className="rounded-full bg-red-100/10 p-2 flex-shrink-0">
                                                 <Users className="h-5 w-5 text-[#FF6F61]" />
@@ -305,29 +287,14 @@ export default function DesktopTeacherHistory() {
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                    {/* Progress Bar Section */}
                                     <div className="mt-6">
                                         <div className="flex justify-between mb-1">
                                             <p className="text-sm text-gray-600">Average Final Score</p>
                                             <p className="text-sm font-medium text-gray-800">{quiz.avgFinalScore}%</p>
                                         </div>
-                                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-[#4A90E2]" 
-                                                style={{ width: `${quiz.avgFinalScore}%` }}
-                                            ></div>
-                                        </div>
-                                        
                                         <div className="flex justify-between mt-3 mb-1">
                                             <p className="text-sm text-gray-600">Average Auto Score</p>
-                                            <p className="text-sm font-medium text-gray-800">{quiz.avgAutoFinalScore}%</p>
-                                        </div>
-                                        <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
-                                            <div 
-                                                className="h-full bg-[#4A90E2]" 
-                                                style={{ width: `${quiz.avgAutoFinalScore}%` }}
-                                            ></div>
+                                            <p className="text-sm font-medium text-gray-800">{quiz.avgAutoFinalScore * 100}%</p>
                                         </div>
                                     </div>
                                 </div>

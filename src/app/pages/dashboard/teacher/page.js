@@ -52,13 +52,13 @@ export default function TeacherDashboard() {
   const userName = userData?.name || "Teacher";
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-6 py-8">
       {/* Teacher Dashboard Header */}
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-[#4A90E2] mb-2">
-          Teacher Dashboard
+        Welcome , {userName}!
         </h1>
-        <p className="text-gray-600">Welcome back, {userName}!</p>
+        {/* <p className="text-gray-600">Welcome back, {userName}!</p> */}
       </header>
 
       {/* Teacher Dashboard Content */}
@@ -87,7 +87,7 @@ export default function TeacherDashboard() {
       </div>
 
       {/* Additional Teacher Features */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
           <h2 className="text-xl font-semibold text-[#FF6F61]">Student Performance</h2>
           <p className="mt-2 text-gray-600">Track how your students are doing.</p>
@@ -102,7 +102,7 @@ export default function TeacherDashboard() {
             Manage Resources
           </Link>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
