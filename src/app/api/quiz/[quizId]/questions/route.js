@@ -35,6 +35,7 @@ export async function GET(req, context) {
                 description: quiz.description,
                 duration: quiz.duration,
                 shuffleQuestions: quiz.shuffleQuestions,
+                showSingleQuestion: quiz.showSingleQuestion,
                 startTime: quiz.startTime,
                 endTime: quiz.endTime
             }

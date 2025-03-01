@@ -25,15 +25,14 @@ export default function TakeTestPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [responses, setResponses] = useState({});
   const [quizInfo, setQuizInfo] = useState(null);
-  const [totalMarks, setTotalMarks] = useState(0); // State for total marks
+  const [totalMarks, setTotalMarks] = useState(0);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-  // Custom hooks
   const { isBlurred, handleGoFullscreen } = useFullscreenManager(isSubmitted);
   const { tabSwitchCount } = useTabMonitor(isSubmitted, () => handleSubmitQuiz());
   useCopyPasteBlocker();
   const { questions, error, loading, quizData } = useQuizData(quizId, isSubmitted, setResponses);
 
-  // Set quiz info and calculate total marks
   useEffect(() => {
     if (quizData) {
       setQuizInfo(quizData);
@@ -44,34 +43,25 @@ export default function TakeTestPage() {
     }
   }, [quizData, questions]);
 
-  // Handle answer changes
   const handleAnswerChange = (questionId, answer, questionType) => {
     setResponses(prev => {
       const newResponses = { ...prev };
-
-      if (questionType === "Subjective") {
-        newResponses[questionId] = [answer];
-      } else if (questionType === "Single Correct MCQ") {
+      if (questionType === "Subjective" || questionType === "Single Correct MCQ") {
         newResponses[questionId] = [answer];
       } else {
-        // Multiple Correct MCQ
         const currentAnswers = [...(prev[questionId] || [])];
         const answerIndex = currentAnswers.indexOf(answer);
-
         if (answerIndex === -1) {
           currentAnswers.push(answer);
         } else {
           currentAnswers.splice(answerIndex, 1);
         }
-
         newResponses[questionId] = currentAnswers;
       }
-
       return newResponses;
     });
   };
 
-  // Submit quiz
   async function handleSubmitQuiz() {
     if (hasSubmitted.current) return;
     hasSubmitted.current = true;
@@ -100,6 +90,12 @@ export default function TakeTestPage() {
     }
   }
 
+  const handleNextQuestion = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    }
+  };
+
   const handleTimerEnd = useCallback(() => {
     toast.info("Time's up! Submitting your quiz automatically.");
     handleSubmitQuiz();
@@ -112,6 +108,12 @@ export default function TakeTestPage() {
   if (error) {
     return <div className="text-center p-8 text-red-500">{error}</div>;
   }
+  console.log("working:", quizInfo);
+
+  // Determine whether to show single question or all questions
+  const displayQuestions = quizInfo?.showSingleQuestion
+    ? [questions[currentQuestionIndex]]
+    : questions;
 
   return (
     <>
@@ -144,44 +146,45 @@ export default function TakeTestPage() {
 
         <div className="max-w-3xl mx-auto bg-white p-8 shadow-lg rounded-lg">
           <QuizQuestions
-            questions={questions}
+            questions={displayQuestions}
             responses={responses}
             onAnswerChange={handleAnswerChange}
           />
 
-          <button
-            onClick={handleSubmitQuiz}
-            className="w-full mt-4 bg-green-500 text-white p-3 rounded-lg hover:bg-green-600 flex items-center justify-center"
-            disabled={isSubmitted}
-          >
-            {isSubmitting ? (
-              <div className="flex items-center">
-                <svg
-                  className="animate-spin h-5 w-5 mr-3 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
+          {/* Navigation buttons only when showSingleQuestion is true */}
+          {quizInfo?.showSingleQuestion && (
+            <div className="mt-4 flex justify-end">
+              {currentQuestionIndex < questions.length - 1 ? (
+                <button
+                  onClick={handleNextQuestion}
+                  className="p-3 rounded-lg bg-blue-500 text-white hover:bg-blue-600"
                 >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  ></path>
-                </svg>
-                <span>Submitting...</span>
-              </div>
-            ) : (
-              "📤 Submit Quiz"
-            )}
-          </button>
+                  Next ➡️
+                </button>
+              ) : (
+                <button
+                  onClick={handleSubmitQuiz}
+                  className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600"
+                  disabled={isSubmitted}
+                >
+                  {isSubmitting ? "Submitting..." : "📤 Submit Quiz"}
+                </button>
+              )}
+            </div>
+          )}
+
+          {/* Submit button when showSingleQuestion is false */}
+          {!quizInfo?.showSingleQuestion && (
+            <div className="mt-4 flex justify-end">
+              <button
+                onClick={handleSubmitQuiz}
+                className="bg-green-500 text-white p-3 rounded-lg hover:bg-green-600"
+                disabled={isSubmitted}
+              >
+                {isSubmitting ? "Submitting..." : "📤 Submit Quiz"}
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </>

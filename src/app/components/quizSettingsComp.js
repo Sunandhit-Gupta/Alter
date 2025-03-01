@@ -3,27 +3,27 @@ import { useEffect, useState } from "react";
 
 export default function QuizSettingsComp({ quizId, onSubmit }) {
     const [shuffleQuestions, setShuffleQuestions] = useState(false);
+    const [showSingleQuestion, setShowSingleQuestion] = useState(false); // New State
     const [duration, setDuration] = useState(30);
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
-    // Convert UTC to local time for display
     const convertUTCToLocal = (utcDateString) => {
         if (!utcDateString) return "";
         const utcDate = new Date(utcDateString);
-        return utcDate.toLocaleString("sv").slice(0, 16); // YYYY-MM-DDTHH:MM in local time
+        return utcDate.toLocaleString("sv").slice(0, 16);
     };
 
-    // Fetch settings from server
     useEffect(() => {
         const fetchSettings = async () => {
             try {
                 const res = await axios.get(`/api/quiz/settings?quizId=${quizId}`);
-                const { shuffleQuestions, duration, startTime, endTime } = res.data.settings;
+                const { shuffleQuestions, showSingleQuestion, duration, startTime, endTime } = res.data.settings;
 
                 setShuffleQuestions(shuffleQuestions);
+                setShowSingleQuestion(showSingleQuestion); // Set the state
                 setDuration(duration);
                 setStartTime(startTime ? convertUTCToLocal(startTime) : "");
                 setEndTime(endTime ? convertUTCToLocal(endTime) : "");
@@ -38,7 +38,6 @@ export default function QuizSettingsComp({ quizId, onSubmit }) {
         if (quizId) fetchSettings();
     }, [quizId]);
 
-    // Calculate endTime locally for display only
     useEffect(() => {
         if (startTime && duration) {
             const start = new Date(startTime);
@@ -49,7 +48,6 @@ export default function QuizSettingsComp({ quizId, onSubmit }) {
         }
     }, [startTime, duration]);
 
-    // Validate inputs
     const validateInputs = () => {
         const now = new Date();
         const start = new Date(startTime);
@@ -68,14 +66,14 @@ export default function QuizSettingsComp({ quizId, onSubmit }) {
         return true;
     };
 
-    // Handle save: Send settings to server (no endTime, let server calculate it)
     const handleSubmit = () => {
         if (!validateInputs()) return;
 
         const quizSettings = {
             shuffleQuestions,
+            showSingleQuestion, // Include in submission
             duration,
-            startTime, // Send as local time string, server will convert to UTC
+            startTime,
         };
 
         console.log("Submitting Settings:", quizSettings);
@@ -133,6 +131,17 @@ export default function QuizSettingsComp({ quizId, onSubmit }) {
                     className="w-5 h-5"
                     checked={shuffleQuestions}
                     onChange={() => setShuffleQuestions(!shuffleQuestions)}
+                />
+            </div>
+
+            {/* New Toggle Field */}
+            <div className="flex items-center justify-between mb-4">
+                <label className="text-gray-700 font-medium">Show Single Question at a Time:</label>
+                <input
+                    type="checkbox"
+                    className="w-5 h-5"
+                    checked={showSingleQuestion}
+                    onChange={() => setShowSingleQuestion(!showSingleQuestion)}
                 />
             </div>
 

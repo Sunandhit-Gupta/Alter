@@ -13,6 +13,7 @@ const quizSchema = new mongoose.Schema({
   uniqueRolls: [{ type: String }],
   questions: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Question' }],
   shuffleQuestions: { type: Boolean, default: false },
+  showSingleQuestion: { type: Boolean, default: false },
   status: { type: String, enum: ['Draft', 'Published', 'Ongoing', 'Completed'], default: 'Draft' },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   startTime: { type: Date },

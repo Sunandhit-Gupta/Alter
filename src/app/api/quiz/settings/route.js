@@ -28,6 +28,7 @@ export async function GET(req) {
 
         const settings = {
             shuffleQuestions: quiz.shuffleQuestions ?? false,
+            showSingleQuestion: quiz.showSingleQuestion ?? false,
             duration: quiz.duration ?? 30,
             startTime: quiz.startTime?.toISOString() ?? null,
             endTime: quiz.endTime?.toISOString() ?? null,
@@ -51,7 +52,7 @@ export async function PUT(req) {
         }
 
         const { quizId, settings } = await req.json();
-        const { shuffleQuestions, duration, startTime } = settings;
+        const { shuffleQuestions, showSingleQuestion, duration, startTime } = settings;
 
         if (!quizId) {
             return NextResponse.json({ message: 'Quiz ID is required' }, { status: 400 });
@@ -76,18 +77,21 @@ export async function PUT(req) {
         const endUTC = new Date(startLocal.getTime() + duration * 60 * 1000);
         const endUTCString = endUTC.toISOString();
 
-        const updatedQuiz = await Quiz.findByIdAndUpdate(
-            quizId,
-            {
-                $set: {
-                    shuffleQuestions,
-                    duration,
-                    startTime: startUTCString,
-                    endTime: endUTCString,
-                },
-            },
-            { new: true }
-        );
+
+
+const updatedQuiz = await Quiz.findByIdAndUpdate(
+    quizId,
+    {
+        $set: {
+            shuffleQuestions,
+            showSingleQuestion, // Add this
+            duration,
+            startTime: startUTCString,
+            endTime: endUTCString,
+        },
+    },
+    { new: true }
+);
 
         if (!updatedQuiz) {
             return NextResponse.json({ message: 'Quiz not found' }, { status: 404 });
