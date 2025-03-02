@@ -27,11 +27,124 @@ export default function TakeTestPage() {
   const [quizInfo, setQuizInfo] = useState(null);
   const [totalMarks, setTotalMarks] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [timeOutOfFocus, setTimeOutOfFocus] = useState(0);
+  const [currentOutOfFocusTime, setCurrentOutOfFocusTime] = useState(0); // Time for current out-of-focus period
+  const [lastBlurTime, setLastBlurTime] = useState(null);
+  const MAX_OUT_OF_FOCUS_TIME = 20;
 
   const { isBlurred, handleGoFullscreen } = useFullscreenManager(isSubmitted);
   const { tabSwitchCount } = useTabMonitor(isSubmitted, () => handleSubmitQuiz());
   useCopyPasteBlocker();
   const { questions, error, loading, quizData } = useQuizData(quizId, isSubmitted, setResponses);
+
+  const [focusWarnings, setFocusWarnings] = useState(0);
+  const [pipWarningCount, setPipWarningCount] = useState(0);
+  const timerRef = useRef(null);
+
+  useEffect(() => {
+    const handleBlur = () => {
+      if (!isSubmitted) {
+        setLastBlurTime(Date.now());
+        setFocusWarnings(prev => {
+          const newCount = prev + 1;
+          toast.error(`⚠️ Focus lost! Warning ${newCount}/3`);
+          return newCount;
+        });
+        // Start the real-time timer
+        timerRef.current = setInterval(() => {
+          setCurrentOutOfFocusTime(prev => prev + 0.1);
+        }, 100);
+      }
+    };
+
+    const handleFocus = () => {
+      if (!isSubmitted && lastBlurTime) {
+        clearInterval(timerRef.current);
+        const timeSpentOut = (Date.now() - lastBlurTime) / 1000;
+        setTimeOutOfFocus(prev => {
+          const newTotal = prev + timeSpentOut;
+          if (newTotal >= MAX_OUT_OF_FOCUS_TIME) {
+            toast.warning("Exceeded 20 seconds out of focus. Auto-submitting quiz.");
+            handleSubmitQuiz();
+          }
+          return newTotal;
+        });
+        setCurrentOutOfFocusTime(0); // Reset current timer
+        setLastBlurTime(null);
+        toast.info("You are back on the quiz!");
+      }
+    };
+
+    const handleMouseLeave = (event) => {
+      if (!isSubmitted && (event.clientY <= 0 || event.clientX <= 0 || event.clientX >= window.innerWidth)) {
+        if (!lastBlurTime) { // Only start if not already blurred
+          setLastBlurTime(Date.now());
+          setFocusWarnings(prev => {
+            const newCount = prev + 1;
+            toast.error(`⚠️ Cursor left the quiz! Warning ${newCount}/3`);
+            return newCount;
+          });
+          timerRef.current = setInterval(() => {
+            setCurrentOutOfFocusTime(prev => prev + 0.1);
+          }, 100);
+        }
+      }
+    };
+
+    const handleMouseEnter = () => {
+      if (!isSubmitted && lastBlurTime) {
+        clearInterval(timerRef.current);
+        const timeSpentOut = (Date.now() - lastBlurTime) / 1000;
+        setTimeOutOfFocus(prev => {
+          const newTotal = prev + timeSpentOut;
+          if (newTotal >= MAX_OUT_OF_FOCUS_TIME) {
+            toast.warning("Exceeded 20 seconds out of focus. Auto-submitting quiz.");
+            handleSubmitQuiz();
+          }
+          return newTotal;
+        });
+        setCurrentOutOfFocusTime(0);
+        setLastBlurTime(null);
+      }
+    };
+
+    window.addEventListener("blur", handleBlur);
+    window.addEventListener("focus", handleFocus);
+    window.addEventListener("mouseleave", handleMouseLeave);
+    window.addEventListener("mouseenter", handleMouseEnter);
+
+    return () => {
+      clearInterval(timerRef.current);
+      window.removeEventListener("blur", handleBlur);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("mouseleave", handleMouseLeave);
+      window.removeEventListener("mouseenter", handleMouseEnter);
+    };
+  }, [isSubmitted, lastBlurTime]);
+  // Detect Picture-in-Picture Mode
+  useEffect(() => {
+    const handlePictureInPicture = () => {
+      setPipWarningCount(prev => prev + 1);
+
+      toast.error("⚠️ Picture-in-Picture mode is not allowed! Exiting now.");
+
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture().catch(() => {});
+      }
+
+      if (pipWarningCount >= 1) { // Allow only 1 warning before auto-submitting
+        toast.warning("You tried PiP mode twice. Submitting your quiz.");
+        handleSubmitQuiz();
+      }
+    };
+
+    document.addEventListener("enterpictureinpicture", handlePictureInPicture);
+
+    return () => {
+      document.removeEventListener("enterpictureinpicture", handlePictureInPicture);
+    };
+  }, [pipWarningCount]);
+
 
   useEffect(() => {
     if (quizData) {
@@ -115,6 +228,8 @@ export default function TakeTestPage() {
     ? [questions[currentQuestionIndex]]
     : questions;
 
+    const timeLeft = Math.max(0, MAX_OUT_OF_FOCUS_TIME - timeOutOfFocus);
+
   return (
     <>
       {isBlurred && <FullscreenPrompt onGoFullscreen={handleGoFullscreen} />}
@@ -127,6 +242,12 @@ export default function TakeTestPage() {
 
           <div className="text-lg font-semibold">
             Total Marks: <span className="text-green-600">{totalMarks}</span>
+          </div>
+
+          <div className="text-lg font-semibold">
+            Time out of focus: Total: <span className="text-red-600">{timeOutOfFocus.toFixed(1)}s</span>
+            {lastBlurTime && <> | Current: <span className="text-red-600">{currentOutOfFocusTime.toFixed(1)}s</span></>}
+            {' '}Allowed: <span className="text-red-600">{timeLeft.toFixed(1)}s / {MAX_OUT_OF_FOCUS_TIME}s</span>
           </div>
 
           {quizInfo?.duration && (
