@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { toast } from "react-toastify";
 
 
+
 export default function CreateQuiz() {
     const { data: session, status } = useSession();
     const [quizId, setQuizId] = useState(null);
