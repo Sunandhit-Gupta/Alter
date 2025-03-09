@@ -1,3 +1,4 @@
+import TextareaAutosize from "react-textarea-autosize";
 export default function QuizQuestions({ questions, responses, onAnswerChange }) {
   return (
     <>
@@ -33,12 +34,18 @@ export default function QuizQuestions({ questions, responses, onAnswerChange }) 
 
 function SubjectiveQuestion({ questionId, value, onChange }) {
   return (
-    <textarea
-      className="w-full p-3 border rounded-lg"
-      placeholder="Type your answer here..."
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-    />
+    <div className="relative">
+      <TextareaAutosize
+        className="w-full p-4 border rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none min-h-[150px] shadow-sm"
+        placeholder="Type your answer here... (Press Enter for a new line)"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        minRows={6}
+      />
+      <p className="text-sm text-gray-500 mt-1">
+        Word count: {value.split(/\s+/).filter(Boolean).length}
+      </p>
+    </div>
   );
 }
 
