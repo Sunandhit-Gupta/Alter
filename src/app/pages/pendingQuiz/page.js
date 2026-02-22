@@ -148,7 +148,7 @@ export default function PendingQuiz() {
       ) : (
         <ul className="space-y-4 w-full max-w-4xl mx-auto">
           {pendingQuizzes.length > 0 ? (
-            pendingQuizzes.map((quiz) => (
+            [...pendingQuizzes].reverse().map((quiz) => (
               <PendingQuizItem
                 key={quiz._id}
                 quiz={quiz}

@@ -46,7 +46,7 @@ export default function QuizQuesComp({ quizId }) {
 
 
 const handleDeleteQuestion = async (questionIdentifier) => {
-    if (!questionIdentifier) return; // Safety check
+    if (questionIdentifier === undefined || questionIdentifier === null) return;
 
     if (typeof questionIdentifier === "string") {
         // It's a saved question (has _id), delete from DB

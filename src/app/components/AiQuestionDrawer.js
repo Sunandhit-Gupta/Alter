@@ -5,8 +5,10 @@ import { toast } from "react-toastify";
 
 export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
     const [prompt, setPrompt] = useState("");
-    const [aiQuestions, setAiQuestions] = useState([]); // Store multiple questions
+    const [questionType, setQuestionType] = useState("single");
+    const [aiQuestions, setAiQuestions] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [questionCount, setQuestionCount] = useState(5); // Default 5
 
     const fetchAiQuestions = async () => {
         if (!prompt.trim()) {
@@ -15,19 +17,21 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
         }
 
         setLoading(true);
+
         try {
-            const response = await axios.post("/api/quiz/generate-question", { prompt });
+            const response = await axios.post("/api/quiz/generate-question", {
+                prompt,
+                type: questionType,
+                count: questionCount,
+            });
 
             if (response.data.data) {
                 const structuredQuestions = response.data.data;
 
-                console.log(structuredQuestions);
-                // Ensure structuredQuestions.questions exists and is an array
-                if (!Array.isArray(structuredQuestions) || !structuredQuestions) {
-                    throw new Error("Invalid response format: questions not found.");
+                if (!Array.isArray(structuredQuestions)) {
+                    throw new Error("Invalid response format.");
                 }
 
-                // Map the received questions properly
                 const parsedQuestions = structuredQuestions.map((q, index) => ({
                     id: index + 1,
                     text: q.text,
@@ -40,7 +44,7 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
                     points: q.points || 1
                 }));
 
-                setAiQuestions(parsedQuestions); // Store multiple questions properly
+                setAiQuestions(parsedQuestions);
             } else {
                 toast.error("Invalid response from AI.");
             }
@@ -48,37 +52,78 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
             console.error("Error fetching AI questions:", error);
             toast.error("Failed to generate questions. Try again.");
         }
+
         setLoading(false);
     };
 
-
     return (
-        <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-lg transition-transform duration-300 flex flex-col">
-            {/* Header Section */}
-            <div className="p-6 border-b flex justify-between items-center bg-white">
+        <div className="fixed right-0 top-0 h-full w-96 bg-white shadow-lg flex flex-col">
+            {/* Header */}
+            <div className="p-6 border-b flex justify-between items-center">
                 <h2 className="text-xl font-bold">Generate AI Questions</h2>
                 <button className="text-red-500 font-bold" onClick={onClose}>
                     ✖
                 </button>
             </div>
 
-            {/* Scrollable Content */}
+            {/* Content */}
             <div className="flex-1 overflow-y-auto p-6">
+
+                {/* Question Type */}
+                <select
+                    className="w-full p-2 border border-gray-300 rounded mb-3 bg-white focus:outline-none"
+                    value={questionType}
+                    onChange={(e) => setQuestionType(e.target.value)}
+                >
+                    <option value="single">Single Correct MCQ</option>
+                    <option value="multiple">Multiple Correct MCQ</option>
+                    <option value="mixed">Mixed</option>
+                </select>
+
+                {/* Prompt */}
                 <input
                     type="text"
                     className="w-full p-2 border rounded"
-                    placeholder="Enter prompt..."
+                    placeholder="Enter topic or prompt..."
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
                 />
+
+                {/* Question Count Boxes */}
+                <div className="mt-4">
+                    <label className="text-sm font-medium text-gray-600 block mb-2">
+                        Number of Questions
+                    </label>
+
+                    <div className="grid grid-cols-4 gap-2">
+                        {[5, 10, 15, 20].map((num) => (
+                            <button
+                                key={num}
+                                type="button"
+                                onClick={() => setQuestionCount(num)}
+                                className={`py-2 rounded-lg border text-sm font-medium transition
+                                    ${
+                                        questionCount === num
+                                            ? "bg-blue-500 text-white border-blue-500"
+                                            : "bg-gray-100 hover:bg-gray-200 border-gray-300"
+                                    }`}
+                            >
+                                {num}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Generate Button */}
                 <button
-                    className="mt-3 bg-blue-500 text-white px-4 py-2 rounded w-full"
+                    className="mt-4 bg-blue-500 text-white px-4 py-2 rounded w-full"
                     onClick={fetchAiQuestions}
                     disabled={loading}
                 >
                     {loading ? "Generating..." : "Generate Questions"}
                 </button>
 
+                {/* AI Questions List */}
                 {aiQuestions.length > 0 && (
                     <div className="mt-4 space-y-4">
                         {aiQuestions.map((question, qIndex) => (
@@ -104,6 +149,7 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
                                         </li>
                                     ))}
                                 </ul>
+
                                 <button
                                     className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
                                     onClick={() =>
@@ -113,7 +159,7 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
                                         })
                                     }
                                 >
-                                    ✅ Add to Quiz
+                                    {question.added ? "✔ Added" : "✅ Add to Quiz"}
                                 </button>
                             </div>
                         ))}
@@ -121,8 +167,8 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
                 )}
             </div>
 
-            {/* "Next" Button */}
-            <div className="p-6 border-t bg-white">
+            {/* Next Questions */}
+            <div className="p-6 border-t">
                 <button
                     className="bg-yellow-500 text-white px-4 py-2 rounded w-full"
                     onClick={fetchAiQuestions}
