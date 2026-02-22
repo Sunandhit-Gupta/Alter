@@ -15,7 +15,7 @@ export default function QuestionList({ questions, handleDelete }) {
                             </div>
                             <button
                                 className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-                                onClick={() => handleDelete(q._id)}
+                                onClick={() => handleDelete(q._id ?? index)}
                             >
                                 🗑️ Delete
                             </button>
