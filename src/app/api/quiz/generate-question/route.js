@@ -3,16 +3,29 @@ import { NextResponse } from "next/server";
 
 export async function POST(req) {
     try {
-        const { prompt } = await req.json();
+        const { prompt, type,count } = await req.json();
 
         if (!prompt) {
             return NextResponse.json({ error: "Prompt is required" }, { status: 400 });
         }
 
-        // Modify the structured prompt to request multiple questions
+        let instruction = "";
+
+        if (type === "single") {
+            instruction = `Generate exactly ${count} single correct multiple-choice questions.`;
+        } else if (type === "multiple") {
+            instruction = `Generate exactly ${count} multiple correct multiple-choice questions (each question must have more than one correct answer).`;
+        } else if (type === "mixed") {
+            instruction = `Generate exactly ${count} questions with a mix of single and multiple correct multiple-choice questions.`;
+        } else {
+            instruction = "Generate exactly 3 single correct multiple-choice questions.";
+        }
+
         const structuredPrompt = `
-        Generate **3 multiple-choice quiz questions or theory questions** based on: "${prompt}".
-        Each question should follow this JSON format inside triple backticks:
+        ${instruction}
+        Topic: "${prompt}".
+
+        Each question must follow this JSON format inside triple backticks:
         \`\`\`json
         {
             "questions": [
@@ -34,7 +47,11 @@ export async function POST(req) {
             ]
         }
         \`\`\`
-        Ensure that the correct answer(s) exist in the options.
+
+        Ensure that:
+        - All correct answers exist inside the options array.
+        - Do not include explanations.
+        - Return only valid JSON inside triple backticks.
         `;
 
         // Send request to Gemini API (1.5-flash)
