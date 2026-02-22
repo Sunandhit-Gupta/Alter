@@ -38,6 +38,7 @@ export default function QuizQuesComp({ quizId }) {
             options: [],
             correctAnswers: type === "Subjective" ? [""] : [],
             points: 1,  // Default points to 1
+            images: []
         });
         setShowPopup(false);
     };
@@ -102,7 +103,8 @@ const handleDeleteQuestion = async (questionIdentifier) => {
                 quizId,
                 questions: newQuestions.map(q => ({
                     ...q,
-                    points: q.points || 1  // Ensure points are sent
+                    points: q.points || 1,
+                    images: q.images || []
                 })),
             });
 

@@ -1,9 +1,9 @@
-import StudentResponse from "@/app/models/studentResponse";
 import Quiz from "@/app/models/quiz";
-import Question from "@/app/models/question";
+import StudentResponse from "@/app/models/studentResponse";
 import User from "@/app/models/user";
 import { connectToDatabase } from "@/lib/mongodb";
 import { NextResponse } from "next/server";
+import Question from "@/app/models/question";
 
 export async function GET(req) {
     const { searchParams } = new URL(req.url);
@@ -24,7 +24,12 @@ export async function GET(req) {
         }
 
         // Fetch quiz with populated questions
-        const quiz = await Quiz.findById(quizId).populate("questions").lean();
+        const quiz = await Quiz.findById(quizId)
+            .populate({
+                path: "questions",
+                model: "Question"
+            })
+            .lean();
         if (!quiz) {
             return NextResponse.json({ message: "Quiz not found." }, { status: 404 });
         }
@@ -57,7 +62,8 @@ export async function GET(req) {
                 text: q.text,
                 options: q.options,
                 correctAnswers: q.correctAnswers,
-                points: q.points
+                points: q.points,
+                images: q.images || []
             }))
         };
 

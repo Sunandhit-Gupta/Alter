@@ -58,7 +58,7 @@ export default function StudentQuizResponse() {
                 {response?.responses.map((resp, index) => {
                     const question = quiz?.questions.find((q) => q._id === resp.questionId);
                     const isCorrect = resp.givenAnswer.every((ans) => question.correctAnswers.includes(ans)) &&
-                                     question.correctAnswers.every((ans) => resp.givenAnswer.includes(ans));
+                        question.correctAnswers.every((ans) => resp.givenAnswer.includes(ans));
 
                     return (
                         <div
@@ -68,6 +68,22 @@ export default function StudentQuizResponse() {
                             <h3 className="text-xl font-semibold text-[#FF6F61] mb-2">
                                 Q{index + 1}: {question?.text}
                             </h3>
+                            {/* ⭐ SHOW QUESTION IMAGES */}
+                            {question?.images?.length > 0 && (
+                                <div className="flex gap-2 flex-wrap mb-3">
+                                    {question.images.map((img, i) => (
+                                        <img
+                                            key={i}
+                                            src={img}
+                                            alt="question-img"
+                                            className="max-h-48 rounded border shadow"
+                                        />
+                                    ))}
+                                </div>
+                            )}
+
+                            {console.log("QUIZ QUESTIONS:", quiz?.questions)}
+
                             <p className="text-gray-700 mb-2">
                                 <span className="font-semibold">Type:</span> {question?.type}
                             </p>
@@ -109,7 +125,7 @@ export default function StudentQuizResponse() {
                 })}
             </div>
             <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-            <p className="text-gray-800 font-semibold">
+                <p className="text-gray-800 font-semibold">
                     Total Auto Score: <span className="text-green-600">{response?.totalAutoScore}</span>
                 </p>
                 <p className="text-gray-800 font-semibold">

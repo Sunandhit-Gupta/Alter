@@ -31,9 +31,13 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
                 const parsedQuestions = structuredQuestions.map((q, index) => ({
                     id: index + 1,
                     text: q.text,
-                    options: Array.isArray(q.options) ? q.options.map((opt, idx) => ({ id: idx + 1, text: opt.text })) : [],
+                    options: Array.isArray(q.options)
+                        ? q.options.map(opt => typeof opt === "object" ? opt.text : opt)
+                        : [],
                     correctAnswers: Array.isArray(q.correctAnswers) ? q.correctAnswers : [],
                     type: q.type,
+                    images: Array.isArray(q.images) ? q.images : [],
+                    points: q.points || 1
                 }));
 
                 setAiQuestions(parsedQuestions); // Store multiple questions properly
@@ -80,16 +84,34 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
                         {aiQuestions.map((question, qIndex) => (
                             <div key={qIndex} className="p-4 border rounded bg-gray-100">
                                 <p className="font-semibold">{question.text}</p>
+                                {question.images?.length > 0 && (
+                                    <div className="flex gap-2 flex-wrap mt-2">
+                                        {question.images.map((img, i) => (
+                                            <img key={i} src={img} className="h-24 rounded border" />
+                                        ))}
+                                    </div>
+                                )}
                                 <ul className="mt-2">
                                     {question.options.map((opt, i) => (
-                                        <li key={i} className={`p-2 rounded ${question.correctAnswers.includes(opt.text) ? "bg-green-200" : ""}`}>
-                                            {opt.text}
+                                        <li
+                                            key={i}
+                                            className={`p-2 rounded ${question.correctAnswers.includes(opt)
+                                                ? "bg-green-200"
+                                                : ""
+                                                }`}
+                                        >
+                                            {opt}
                                         </li>
                                     ))}
                                 </ul>
                                 <button
                                     className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
-                                    onClick={() => onAddQuestion(question)}
+                                    onClick={() =>
+                                        onAddQuestion({
+                                            ...question,
+                                            images: question.images || []
+                                        })
+                                    }
                                 >
                                     ✅ Add to Quiz
                                 </button>
