@@ -10,8 +10,19 @@ export async function POST(request) {
         return Response.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    const { quizTitle, description, duration, batch, courseCode, rollRange, uniqueRolls } = await request.json();
-    if (!quizTitle || !description || !duration) {
+    const {
+        quizTitle,
+        description,
+        duration,
+        batch,
+        courseCode,
+        rollRange,
+        uniqueRolls,
+        startTime,
+        endTime,
+        status
+    } = await request.json();
+    if (!quizTitle || !description || !duration || !batch || !courseCode) {
         return Response.json({ message: "Missing required fields" }, { status: 400 });
     }
 
@@ -32,7 +43,10 @@ export async function POST(request) {
             courseCode,
             rollRange,
             uniqueRolls,
-            createdBy: session.user.id,  // Use ID, not email
+            status: status || "Draft",
+            startTime: startTime ? new Date(startTime) : null,
+            endTime: endTime ? new Date(endTime) : null,
+            createdBy: session.user.id,
         });
 
 
