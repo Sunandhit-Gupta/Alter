@@ -151,13 +151,27 @@ export default function AiQuestionDrawer({ onAddQuestion, onClose }) {
                                 </ul>
 
                                 <button
-                                    className="mt-2 bg-green-500 text-white px-4 py-2 rounded w-full"
-                                    onClick={() =>
+                                    className={`mt-2 px-4 py-2 rounded w-full text-white ${
+                                        question.added
+                                            ? "bg-gray-400 cursor-not-allowed"
+                                            : "bg-green-500 hover:bg-green-600"
+                                    }`}
+                                    disabled={question.added}
+                                    onClick={() => {
+                                        if (question.added) return;
+
                                         onAddQuestion({
                                             ...question,
                                             images: question.images || []
-                                        })
-                                    }
+                                        });
+
+                                        // Mark this question as added
+                                        setAiQuestions(prev =>
+                                            prev.map((q, index) =>
+                                                index === qIndex ? { ...q, added: true } : q
+                                            )
+                                        );
+                                    }}
                                 >
                                     {question.added ? "✔ Added" : "✅ Add to Quiz"}
                                 </button>
