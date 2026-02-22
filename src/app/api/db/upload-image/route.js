@@ -20,6 +20,8 @@ export async function POST(req) {
       );
     }
 
+    console.log("CLOUD:", process.env.CLOUDINARY_CLOUD_NAME);
+    
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
